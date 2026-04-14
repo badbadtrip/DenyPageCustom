@@ -64,7 +64,7 @@ namespace DenyPageCustom
             sb.AppendLine("    '#dpc-iw{display:flex;flex-direction:column;gap:12px}',");
             sb.AppendLine("    '#dpc-inp-wrap{position:relative}',");
             sb.AppendLine("    '#dpc-inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex}',");
-            sb.AppendLine("    '#dpc-inp{width:100%;box-sizing:border-box;padding:14px 44px 14px 42px;background:#141516;border:1px solid #2e2f32;border-radius:10px;color:#ececec;font-family:inherit;font-size:14px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}',");
+            sb.AppendLine("    '#dpc-inp{width:100%;box-sizing:border-box;padding:14px 44px 14px 42px;background:#141516;border:1px solid #2e2f32;border-radius:10px;color:#ececec;font-family:inherit;font-size:14px;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}',");
             sb.AppendLine("    '#dpc-inp::placeholder{color:#555}',");
             sb.AppendLine("    '#dpc-inp:focus{border-color:#666;box-shadow:0 0 0 3px rgba(255,255,255,.05)}',");
             sb.AppendLine("    '#dpc-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;color:#555;transition:color .2s}',");
@@ -95,7 +95,13 @@ namespace DenyPageCustom
             sb.AppendLine("    '@media(max-height:500px) and (orientation:landscape){#dpc{align-items:flex-start;padding:0}#dpc-w{flex-direction:row;min-height:100dvh;border-radius:0;border:none;box-shadow:none}#dpc-r{width:220px;flex-shrink:0;border-left:1px solid #2a2b2e;border-top:none;overflow-y:auto;padding:20px 16px;justify-content:flex-start}#dpc-qr-box{width:120px;height:120px}#dpc-l{overflow-y:auto;padding:20px 24px}}',");
 
             // TV — ограничиваем максимальные размеры
-            sb.AppendLine("    '@media(min-width:1400px){#dpc{padding:40px}#dpc-w{max-width:1100px;max-height:85vh}#dpc-l{padding:40px 48px;gap:24px}#dpc-r{width:320px;padding:40px 32px;gap:20px}#dpc-qr-box{width:180px;height:180px}}'");
+            sb.AppendLine("    '@media(min-width:1400px){#dpc{padding:40px}#dpc-w{max-width:1100px;max-height:85vh;overflow:hidden}#dpc-l{padding:40px 48px;gap:24px;overflow-y:auto}#dpc-r{width:320px;padding:40px 32px;gap:20px;overflow-y:auto}#dpc-qr-box{width:180px;height:180px}}',");
+
+            // TV focus ring — светлая обводка при навигации пультом
+            sb.AppendLine("    '#dpc-inp:focus{border-color:#aaa!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+            sb.AppendLine("    '#dpc-btn:focus{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+            sb.AppendLine("    '#dpc-eye:focus{color:#ddd!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;border-radius:6px;outline:none}',");
+            sb.AppendLine("    '#dpc-tgbtn:focus{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
 
             sb.AppendLine("  ].join('');");
             sb.AppendLine("  document.head.appendChild(s);");
@@ -125,8 +131,8 @@ namespace DenyPageCustom
             sb.AppendLine("    + '<div id=\"dpc-iw\">'");
             sb.AppendLine("    + '<div id=\"dpc-inp-wrap\"><span id=\"dpc-inp-icon\">' + svgLock + '</span>'");
             sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"password\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"new-password\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" readonly />'");
-            sb.AppendLine("    + '<button id=\"dpc-eye\" type=\"button\" tabindex=\"-1\">' + svgEyeOff + '</button></div>'");
-            sb.AppendLine("    + '<button id=\"dpc-btn\">Войти</button>'");
+            sb.AppendLine("    + '<button id=\"dpc-eye\" type=\"button\" tabindex=\"2\">' + svgEyeOff + '</button></div>'");
+            sb.AppendLine("    + '<button id=\"dpc-btn\" tabindex=\"3\">Войти</button>'");
             sb.AppendLine("    + '<div id=\"dpc-err\"></div>'");
             sb.AppendLine("    + '</div>'");
             sb.AppendLine("    + '</div>';");
@@ -177,9 +183,21 @@ namespace DenyPageCustom
             sb.AppendLine("  });");
             sb.AppendLine();
 
+            // Focusable элементы для TV-навигации (порядок: input → eye → btn → tgbtn)
+            sb.AppendLine("  var _tgbtn = document.getElementById('dpc-tgbtn');");
+            sb.AppendLine("  var _focusables = [_inp, _eye, _btn, _tgbtn].filter(function(el){ return !!el; });");
+            sb.AppendLine("  var _focusIdx = 0;");
+            sb.AppendLine();
+            sb.AppendLine("  function focusEl(idx) {");
+            sb.AppendLine("    _focusIdx = (idx + _focusables.length) % _focusables.length;");
+            sb.AppendLine("    _focusables[_focusIdx].focus();");
+            sb.AppendLine("  }");
+            sb.AppendLine();
             sb.AppendLine("  function keepFocus() {");
             sb.AppendLine("    if (!_inp) return;");
-            sb.AppendLine("    if (document.activeElement !== _inp && document.activeElement !== _eye) _inp.focus();");
+            sb.AppendLine("    var active = document.activeElement;");
+            sb.AppendLine("    var managed = _focusables.indexOf(active) !== -1;");
+            sb.AppendLine("    if (!managed) { focusEl(0); }");
             sb.AppendLine("  }");
             sb.AppendLine();
 
@@ -262,14 +280,35 @@ namespace DenyPageCustom
 
             sb.AppendLine("  document.addEventListener('keydown', function(e) {");
             sb.AppendLine("    if (!document.getElementById('dpc')) return;");
-            sb.AppendLine("    if (document.activeElement !== _inp && document.activeElement !== _eye && e.key && e.key.length === 1) _inp.focus();");
+            sb.AppendLine("    var key = e.key;");
+            sb.AppendLine("    // Стрелки вверх/вниз — переход между элементами формы");
+            sb.AppendLine("    if (key === 'ArrowDown' || key === 'ArrowRight') {");
+            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
+            sb.AppendLine("      var cur = _focusables.indexOf(document.activeElement);");
+            sb.AppendLine("      focusEl(cur < 0 ? 0 : cur + 1);");
+            sb.AppendLine("      return;");
+            sb.AppendLine("    }");
+            sb.AppendLine("    if (key === 'ArrowUp' || key === 'ArrowLeft') {");
+            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
+            sb.AppendLine("      var cur2 = _focusables.indexOf(document.activeElement);");
+            sb.AppendLine("      focusEl(cur2 <= 0 ? 0 : cur2 - 1);");
+            sb.AppendLine("      return;");
+            sb.AppendLine("    }");
+            sb.AppendLine("    // Enter/OK на кнопке — клик");
+            sb.AppendLine("    if ((key === 'Enter' || key === ' ') && document.activeElement === _btn) {");
+            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
+            sb.AppendLine("      doLogin();");
+            sb.AppendLine("      return;");
+            sb.AppendLine("    }");
+            sb.AppendLine("    // Любой печатаемый символ — перевести фокус на input");
+            sb.AppendLine("    if (document.activeElement !== _inp && document.activeElement !== _eye && key && key.length === 1) {");
+            sb.AppendLine("      focusEl(0);");
+            sb.AppendLine("    }");
             sb.AppendLine("  }, true);");
             sb.AppendLine();
 
             sb.AppendLine("  setTimeout(keepFocus, 150);");
             sb.AppendLine("  setTimeout(keepFocus, 500);");
-            sb.AppendLine("  setTimeout(keepFocus, 1000);");
-            sb.AppendLine("  setInterval(keepFocus, 1000);");
             sb.AppendLine("}");
             sb.AppendLine();
 
