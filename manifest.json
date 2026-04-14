@@ -1,7 +1,5 @@
 {
   "name": "DenyPageCustom",
-  "description": "Кастомизация deny.js: QR-код Telegram, управление кнопками через init.conf. Генерирует plugins/override/deny.js на основе секции DenyPage.",
-  "version": "1.1",
   "enable": true,
   "dynamic": true
 }

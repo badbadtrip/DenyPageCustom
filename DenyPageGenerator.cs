@@ -8,24 +8,22 @@ namespace DenyPageCustom
     {
         public static string Build(DenyPageConf conf)
         {
-            string tgUrl  = NormalizeTgUrl(conf.tg_target);
-            bool   hasTg  = !string.IsNullOrWhiteSpace(tgUrl);
+            string tgUrl = NormalizeTgUrl(conf.tg_target);
+            bool   hasTg = !string.IsNullOrWhiteSpace(tgUrl);
             string qrSize = "400";
 
-            string jsTgUrl = Js(tgUrl);
-            string jsBadge = Js(string.IsNullOrWhiteSpace(conf.page_badge)    ? "Lampac NextGen" : conf.page_badge);
-            string jsTitle = Js(string.IsNullOrWhiteSpace(conf.page_title)    ? "Вход в систему" : conf.page_title);
-            string jsSub   = Js(string.IsNullOrWhiteSpace(conf.page_subtitle) ? "Для доступа к серверу введите пароль, выданный администратором." : conf.page_subtitle);
-            string jsStep1 = Js(string.IsNullOrWhiteSpace(conf.step1_text)    ? "Введите пароль в поле ниже и нажмите «Войти»." : conf.step1_text);
-            string jsStep2 = Js(string.IsNullOrWhiteSpace(conf.step2_text)
-                ? (hasTg ? "Если пароля нет — напишите боту <b>" + conf.tg_target + "</b>." : "Если пароля нет — обратитесь к администратору.")
-                : conf.step2_text);
-            string jsQrCap = Js(string.IsNullOrWhiteSpace(conf.qr_caption)    ? "Нет пароля?" : conf.qr_caption);
-            string jsQrSub = Js(string.IsNullOrWhiteSpace(conf.qr_subcaption) ? "Отсканируй QR или нажми кнопку, чтобы написать боту." : conf.qr_subcaption);
-            string jsTgBtn = Js(string.IsNullOrWhiteSpace(conf.tg_button_text) ? "Написать боту" : conf.tg_button_text);
+            string jsTgUrl  = Js(tgUrl);
+            string jsBadge  = Js(string.IsNullOrWhiteSpace(conf.page_badge)     ? "Lampac NextGen" : conf.page_badge);
+            string jsTitle  = Js(string.IsNullOrWhiteSpace(conf.page_title)     ? "Вход в Lampa" : conf.page_title);
+            string jsWarn   = Js(string.IsNullOrWhiteSpace(conf.page_subtitle)  ? "Доступ ограничен. Пароль можно получить у администратора." : conf.page_subtitle);
+            string jsHint   = Js(string.IsNullOrWhiteSpace(conf.step1_text)     ? "Введите пароль в поле ниже и нажмите «Войти»." : conf.step1_text);
+            string jsQrCap  = Js(string.IsNullOrWhiteSpace(conf.qr_caption)     ? "Нет пароля?" : conf.qr_caption);
+            string jsQrSub  = Js(string.IsNullOrWhiteSpace(conf.qr_subcaption)  ? "Отсканируй QR или нажми кнопку, чтобы написать боту." : conf.qr_subcaption);
+            string jsTgBtn  = Js(string.IsNullOrWhiteSpace(conf.tg_button_text) ? "Открыть Telegram" : conf.tg_button_text);
+            string jsTgName = Js(string.IsNullOrWhiteSpace(conf.tg_target)      ? "" : conf.tg_target);
 
             var sb = new StringBuilder();
-            sb.AppendLine("// DenyPageCustom v2.5 - auto-generated from init.conf[DenyPage]");
+            sb.AppendLine("// DenyPageCustom v3.0 - auto-generated from init.conf[DenyPage]");
             sb.AppendLine("// DO NOT EDIT - overwritten on config reload.");
             sb.AppendLine();
             sb.AppendLine("var network = new Lampa.Reguest();");
@@ -36,74 +34,68 @@ namespace DenyPageCustom
             sb.AppendLine("  var s = document.createElement('style');");
             sb.AppendLine("  s.textContent = [");
 
-            // Base overlay — off-black + subtle cool radial depth
-            sb.AppendLine("    '#dpc{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",\"Segoe UI\",system-ui,sans-serif;padding:3rem 2rem;box-sizing:border-box;overflow:auto;background:#080b12;background-image:radial-gradient(ellipse 65% 70% at 8% 50%,rgba(20,40,90,.28) 0%,transparent 65%)}',");
-            // Top 1px accent line
-            sb.AppendLine("    '#dpc::before{content:\"\";position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(120,160,255,.18) 35%,rgba(120,160,255,.08) 70%,transparent 100%);pointer-events:none;z-index:1}',");
-            // Wrapper + entrance
-            sb.AppendLine("    '#dpc-w{display:flex;gap:5rem;max-width:1020px;width:100%;align-items:center;animation:dpcIn .55s cubic-bezier(.23,1,.32,1) both}',");
-            sb.AppendLine("    '@keyframes dpcIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}',");
+            sb.AppendLine("    '#dpc{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:\"Manrope\",\"Segoe UI\",system-ui,sans-serif;padding:24px;box-sizing:border-box;overflow:auto;background:#1e1f21}',");
+            sb.AppendLine("    '@keyframes dpcIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}',");
 
-            // ── Left column ──
-            sb.AppendLine("    '#dpc-l{flex:1 1 auto;min-width:0}',");
+            // Container
+            sb.AppendLine("    '#dpc-w{display:flex;gap:0;max-width:960px;width:100%;max-height:90vh;background:#1a1b1d;border:1px solid #2e2f32;border-radius:16px;overflow:hidden;box-shadow:0 8px 60px rgba(0,0,0,.7);animation:dpcIn .6s ease-out}',");
 
-            // Eyebrow — left-border accent, small caps
-            sb.AppendLine("    '#dpc-ey{display:inline-flex;align-items:center;gap:.625rem;font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:#3a5070;margin-bottom:2rem;padding-left:.875rem;border-left:1px solid #1e3050}',");
-            sb.AppendLine("    '#dpc-ey-dot{width:3px;height:3px;border-radius:50%;background:#2a4060;flex-shrink:0}',");
+            // Left column
+            sb.AppendLine("    '#dpc-l{flex:1;padding:32px 40px;display:flex;flex-direction:column;gap:20px;overflow-y:auto}',");
 
-            // Title — big, tight, bright
-            sb.AppendLine("    '#dpc-title{font-size:clamp(2.8rem,5vw,4.2rem);font-weight:700;color:#eef1fa;margin:0 0 1.125rem;line-height:1.03;letter-spacing:-.035em}',");
+            // Logo
+            sb.AppendLine("    '#dpc-logo{font-family:\"Manrope\",\"Segoe UI\",system-ui,sans-serif;font-weight:700;font-size:20px;letter-spacing:2px;color:#e8e8e8;text-transform:uppercase;display:flex;align-items:center;gap:8px}',");
+            sb.AppendLine("    '#dpc-logo-next{font-weight:400;color:#666;letter-spacing:2px}',");
 
-            // Subtitle — clearly readable
-            sb.AppendLine("    '#dpc-sub{font-size:1rem;color:#7a8fa8;margin:0 0 2.5rem;line-height:1.7;max-width:40ch}',");
+            // Title
+            sb.AppendLine("    '#dpc-title{font-size:28px;font-weight:700;color:#f5f5f5;line-height:1.3;margin:0}',");
 
-            // Steps
-            sb.AppendLine("    '#dpc-steps{list-style:none;padding:0;margin:0 0 2.25rem;display:flex;flex-direction:column;gap:.75rem}',");
-            sb.AppendLine("    '#dpc-steps li{display:flex;align-items:baseline;gap:1rem;line-height:1.6}',");
-            sb.AppendLine("    '.dpc-n{font-size:.65rem;font-weight:600;color:#243550;flex-shrink:0;letter-spacing:.04em;padding-top:.15em;min-width:2ch}',");
-            sb.AppendLine("    '.dpc-t{font-size:.9rem;color:#627085;line-height:1.6}',");
-            sb.AppendLine("    '.dpc-t b{color:#8a9db8;font-weight:500}',");
+            // Warning block
+            sb.AppendLine("    '#dpc-warn{background:rgba(255,255,255,.05);border:1px solid #383838;border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5;color:#c0c0c0}',");
+            sb.AppendLine("    '#dpc-warn svg{flex-shrink:0;margin-top:1px;width:18px;height:18px;min-width:18px;min-height:18px}',");
 
-            // Thin separator
-            sb.AppendLine("    '#dpc-sep{height:1px;background:linear-gradient(90deg,rgba(255,255,255,.07) 0%,transparent 65%);margin-bottom:2rem}',");
+            // Hint
+            sb.AppendLine("    '#dpc-hint{font-size:13.5px;color:#808080;line-height:1.6;margin:0}',");
 
-            // Input wrapper
-            sb.AppendLine("    '#dpc-iw{display:flex;flex-direction:column;gap:.625rem}',");
+            // Divider
+            sb.AppendLine("    '#dpc-sep{height:1px;background:#2a2a2a;width:100%}',");
 
-            // Input
-            sb.AppendLine("    '#dpc-inp{width:100%;box-sizing:border-box;background:rgba(255,255,255,.038);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:.95rem 1.125rem;font-size:1rem;color:#eef1fa;outline:none;-webkit-appearance:none;appearance:none;font-family:inherit;transition:border-color .2s ease-out,background .2s ease-out,box-shadow .2s ease-out}',");
-            sb.AppendLine("    '#dpc-inp::placeholder{color:#243040}',");
-            sb.AppendLine("    '#dpc-inp:focus{border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.055);box-shadow:0 0 0 3px rgba(255,255,255,.04)}',");
+            // Form
+            sb.AppendLine("    '#dpc-iw{display:flex;flex-direction:column;gap:12px}',");
+            sb.AppendLine("    '#dpc-inp-wrap{position:relative}',");
+            sb.AppendLine("    '#dpc-inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex}',");
+            sb.AppendLine("    '#dpc-inp{width:100%;box-sizing:border-box;padding:14px 44px 14px 42px;background:#141516;border:1px solid #2e2f32;border-radius:10px;color:#ececec;font-family:inherit;font-size:14px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}',");
+            sb.AppendLine("    '#dpc-inp::placeholder{color:#555}',");
+            sb.AppendLine("    '#dpc-inp:focus{border-color:#666;box-shadow:0 0 0 3px rgba(255,255,255,.05)}',");
+            sb.AppendLine("    '#dpc-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;color:#555;transition:color .2s}',");
+            sb.AppendLine("    '#dpc-eye:hover{color:#999}',");
+            sb.AppendLine("    '#dpc-btn{width:100%;padding:14px;background:#2c2d30;color:#d8d8d8;border:1px solid #3a3b3e;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.3px;transition:background .2s,border-color .2s,transform .1s}',");
+            sb.AppendLine("    '#dpc-btn:disabled{opacity:.3;cursor:default;transform:none}',");
+            sb.AppendLine("    '@media(hover:hover) and (pointer:fine){#dpc-btn:not(:disabled):hover{background:#353639;border-color:#444}#dpc-btn:not(:disabled):active{transform:scale(.98)}}',");
+            sb.AppendLine("    '@media(hover:none){#dpc-btn:not(:disabled):active{transform:scale(.98)}}',");
+            sb.AppendLine("    '#dpc-err{font-size:.82rem;min-height:1.15em;line-height:1.5;padding-left:.125rem;transition:color .2s}',");
 
-            // Button — off-white, liquid-glass inner edge, tactile scale
-            sb.AppendLine("    '#dpc-btn{padding:.9rem 1.875rem;background:#eef1fa;color:#080b12;border:none;border-radius:10px;font-size:.925rem;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:-.015em;align-self:flex-start;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);transition:opacity .18s ease-out,transform .1s ease-out}',");
-            sb.AppendLine("    '#dpc-btn:disabled{opacity:.28;cursor:default;transform:none}',");
+            // Right column
+            sb.AppendLine("    '#dpc-r{width:280px;flex-shrink:0;background:#141516;border-left:1px solid #2a2b2e;padding:32px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}',");
+            sb.AppendLine("    '#dpc-qr-box{width:160px;height:160px;background:#fff;border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 20px rgba(0,0,0,.5);flex-shrink:0}',");
+            sb.AppendLine("    '#dpc-qr-box img{display:block;width:100%;height:auto}',");
+            sb.AppendLine("    '#dpc-qrcap{font-size:14px;font-weight:600;color:#d8d8d8}',");
+            sb.AppendLine("    '#dpc-qrsub{font-size:12.5px;color:#686868;line-height:1.5;margin:0}',");
+            sb.AppendLine("    '#dpc-tgname{font-family:\"JetBrains Mono\",\"Courier New\",monospace;font-size:13px;color:#909090;font-weight:600;letter-spacing:.3px}',");
+            sb.AppendLine("    '#dpc-tgbtn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#252628;color:#d0d0d0;border:1px solid #383a3d;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s,transform .1s;white-space:nowrap}',");
+            sb.AppendLine("    '@media(hover:hover) and (pointer:fine){#dpc-tgbtn:hover{background:#2e3033;border-color:#444}#dpc-tgbtn:active{transform:scale(.97)}}',");
+            sb.AppendLine("    '@media(hover:none){#dpc-tgbtn:active{transform:scale(.97)}}',");
+            sb.AppendLine("    '#dpc-r-info{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}',");
 
-            // Hover — pointer devices only (Emil: gate behind media query)
-            sb.AppendLine("    '@media(hover:hover) and (pointer:fine){#dpc-btn:not(:disabled):hover{opacity:.84}#dpc-btn:not(:disabled):active{transform:scale(.97)}#dpc-tgbtn:hover{border-color:rgba(255,255,255,.16);color:#7a90aa}}',");
-            // Touch active
-            sb.AppendLine("    '@media(hover:none){#dpc-btn:not(:disabled):active{transform:scale(.97)}}',");
+            // Responsive
+            sb.AppendLine("    '@media(max-width:900px){#dpc{padding:16px}#dpc-w{max-width:720px}#dpc-l{padding:24px 28px}#dpc-r{width:240px;padding:24px 20px}}',");
+            sb.AppendLine("    '@media(max-width:700px){#dpc{background:transparent;padding:0;align-items:flex-start}#dpc-w{flex-direction:column;border-radius:0;border:none;box-shadow:none;min-height:100dvh;justify-content:flex-start;max-height:none}#dpc-l{flex:0 0 auto;padding:28px 24px;overflow:visible}#dpc-r{flex:0 0 auto;width:100%;flex-direction:row;align-items:flex-start;justify-content:flex-start;border-left:none;border-top:1px solid #2a2b2e;padding:20px 24px;gap:20px;text-align:left}#dpc-qr-box{width:120px;height:120px;flex-shrink:0}#dpc-r-info{align-items:flex-start;text-align:left;flex:1;min-width:0}}',");
+            sb.AppendLine("    '@media(max-width:420px){#dpc-l{padding:24px 20px}#dpc-r{padding:16px 20px}}',");
+            // Landscape mobile — QR рядом с формой, overflow scroll
+            sb.AppendLine("    '@media(max-height:500px) and (orientation:landscape){#dpc{align-items:flex-start;padding:0}#dpc-w{flex-direction:row;min-height:100dvh;border-radius:0;border:none;box-shadow:none}#dpc-r{width:220px;flex-shrink:0;border-left:1px solid #2a2b2e;border-top:none;overflow-y:auto;padding:20px 16px;justify-content:flex-start}#dpc-qr-box{width:120px;height:120px}#dpc-l{overflow-y:auto;padding:20px 24px}}',");
 
-            // Error / success message
-            sb.AppendLine("    '#dpc-err{font-size:.82rem;min-height:1.15em;line-height:1.5;padding-left:.125rem;transition:color .2s ease-out}',");
-
-            // ── Right column (QR) ──
-            sb.AppendLine("    '#dpc-r{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1.25rem;padding:2rem 1.625rem;border:1px solid rgba(255,255,255,.07);border-radius:20px;background:rgba(255,255,255,.018);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}',");
-            sb.AppendLine("    '#dpc-qr{border-radius:10px;overflow:hidden;background:#fff;padding:9px;line-height:0;flex-shrink:0}',");
-            sb.AppendLine("    '#dpc-qr img{display:block;width:clamp(140px,14vw,210px);height:auto}',");
-            // Text group inside QR panel
-            sb.AppendLine("    '#dpc-rtxt{display:flex;flex-direction:column;align-items:center;gap:1rem}',");
-            sb.AppendLine("    '#dpc-qrcap{font-size:.9rem;font-weight:600;color:#c5cedf;text-align:center;letter-spacing:-.015em}',");
-            sb.AppendLine("    '#dpc-qrsub{font-size:.76rem;color:#445060;text-align:center;max-width:160px;line-height:1.6}',");
-            sb.AppendLine("    '#dpc-tgbtn{padding:.6rem 1.25rem;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#4a6080;text-decoration:none;font-size:.8rem;text-align:center;display:inline-block;font-family:inherit;transition:border-color .18s ease-out,color .18s ease-out}',");
-
-            // ── Responsive ──
-            // Tablet ≤900px: QR сверху (order:-1), внутри — строка: изображение слева, текст справа
-            sb.AppendLine("    '@media(max-width:900px){#dpc{padding:2.5rem 1.75rem;align-items:flex-start}#dpc-w{flex-direction:column;gap:2.5rem;max-width:100%}#dpc-l{max-width:100%}#dpc-sub{max-width:none}#dpc-btn{align-self:auto;width:100%}#dpc-r{order:-1;flex-direction:row;align-items:center;gap:1.25rem;width:100%;padding:1.25rem 1.5rem}#dpc-rtxt{align-items:flex-start;gap:.75rem}#dpc-qrcap{text-align:left}#dpc-qrsub{text-align:left;max-width:none}#dpc-ey{margin-bottom:1.5rem}}',");
-            // Mobile ≤580px
-            sb.AppendLine("    '@media(max-width:580px){#dpc{padding:1.75rem 1.25rem}#dpc-title{font-size:2.4rem}#dpc-sub{font-size:.95rem}#dpc-r{gap:1rem;padding:1rem 1.25rem}#dpc-qr img{width:100px}#dpc-qrcap{font-size:.82rem}#dpc-qrsub{font-size:.72rem}#dpc-inp{font-size:16px;padding:1rem}}',");
-            // 2K+ (≥2000px): larger QR
-            sb.AppendLine("    '@media(min-width:2000px){#dpc-qr img{width:clamp(280px,14vw,360px)}#dpc-r{padding:2.25rem 2rem;gap:1.5rem}#dpc-rtxt{gap:1.125rem}#dpc-qrcap{font-size:1rem}#dpc-qrsub{font-size:.85rem;max-width:200px}#dpc-tgbtn{padding:.7rem 1.5rem;font-size:.875rem}}'");
+            // TV — ограничиваем максимальные размеры
+            sb.AppendLine("    '@media(min-width:1400px){#dpc{padding:40px}#dpc-w{max-width:1100px;max-height:85vh}#dpc-l{padding:40px 48px;gap:24px}#dpc-r{width:320px;padding:40px 32px;gap:20px}#dpc-qr-box{width:180px;height:180px}}'");
 
             sb.AppendLine("  ].join('');");
             sb.AppendLine("  document.head.appendChild(s);");
@@ -115,44 +107,54 @@ namespace DenyPageCustom
             sb.AppendLine("  if (document.getElementById('dpc')) return;");
             sb.AppendLine();
 
-            string rightColHtml = "";
-            if (hasTg && conf.show_qr)
-            {
-                rightColHtml =
-                    "<div id=\\\"dpc-r\\\">" +
-                    "<div id=\\\"dpc-qr\\\"><img src=\\\"https://api.qrserver.com/v1/create-qr-code/?size=" + qrSize + "x" + qrSize + "&data=' + encodeURIComponent(" + jsTgUrl + ") + '&margin=4\\\" width=\\\"" + qrSize + "\\\" height=\\\"" + qrSize + "\\\" loading=\\\"lazy\\\" /></div>" +
-                    "<div id=\\\"dpc-rtxt\\\">" +
-                    "<div id=\\\"dpc-qrcap\\\">' + " + jsQrCap + " + '</div>" +
-                    "<div id=\\\"dpc-qrsub\\\">' + " + jsQrSub + " + '</div>" +
-                    "<a id=\\\"dpc-tgbtn\\\" href=\\\"' + " + jsTgUrl + " + '\\\" target=\\\"_blank\\\" rel=\\\"noopener\\\">' + " + jsTgBtn + " + '</a>" +
-                    "</div>" +
-                    "</div>";
-            }
+            // SVG icons as JS variables
+            sb.AppendLine("  var svgWarn = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#909090\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"flex-shrink:0;width:18px;height:18px\"><path d=\"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>';");
+            sb.AppendLine("  var svgLock = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#555\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:18px;height:18px\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0110 0v4\"/></svg>';");
+            sb.AppendLine("  var svgEyeOff = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94\"/><path d=\"M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19\"/><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"/></svg>';");
+            sb.AppendLine("  var svgEyeOn  = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>';");
+            sb.AppendLine("  var svgTg   = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"width:18px;height:18px\"><circle cx=\"12\" cy=\"12\" r=\"12\" fill=\"#d0d0d0\"/><path d=\"M17.5 7.5l-2.2 10.4c-.16.72-.6.9-1.22.56l-3.36-2.48-1.62 1.56c-.18.18-.33.33-.67.33l.24-3.4 6.17-5.57c.27-.24-.06-.37-.41-.14L6.3 13.86l-3.28-1.03c-.71-.22-.73-.71.15-1.05l12.82-4.94c.59-.21 1.1.14.51 1.66z\" fill=\"#1e1f21\"/></svg>';");
+            sb.AppendLine();
 
-            sb.AppendLine("  var html = ''");
-            sb.AppendLine("    + '<div id=\"dpc\">'");
-            sb.AppendLine("    + '<div id=\"dpc-w\">'");
+            // Left column HTML
+            sb.AppendLine("  var leftHtml = ''");
             sb.AppendLine("    + '<div id=\"dpc-l\">'");
-            sb.AppendLine("    + '<div id=\"dpc-ey\"><span id=\"dpc-ey-dot\"></span>' + " + jsBadge + " + '</div>'");
+            sb.AppendLine("    + '<div id=\"dpc-logo\"><span id=\"dpc-logo-next\">NEXTGEN</span></div>'");
             sb.AppendLine("    + '<h1 id=\"dpc-title\">' + " + jsTitle + " + '</h1>'");
-            sb.AppendLine("    + '<p id=\"dpc-sub\">' + " + jsSub + " + '</p>'");
-            sb.AppendLine("    + '<ul id=\"dpc-steps\">'");
-            sb.AppendLine("    + '<li><span class=\"dpc-n\">01</span><span class=\"dpc-t\">' + " + jsStep1 + " + '</span></li>'");
-            sb.AppendLine("    + '<li><span class=\"dpc-n\">02</span><span class=\"dpc-t\">' + " + jsStep2 + " + '</span></li>'");
-            sb.AppendLine("    + '</ul>'");
-            sb.AppendLine("    + '<div id=\"dpc-sep\"></div>'");
+            sb.AppendLine("    + '<div id=\"dpc-warn\">' + svgWarn + '<span>' + " + jsWarn + " + '</span></div>'");
+            sb.AppendLine("    + '<p id=\"dpc-hint\">' + " + jsHint + " + '</p>'");
             sb.AppendLine("    + '<div id=\"dpc-iw\">'");
-            sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"text\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" />'");
+            sb.AppendLine("    + '<div id=\"dpc-inp-wrap\"><span id=\"dpc-inp-icon\">' + svgLock + '</span>'");
+            sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"password\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"new-password\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" readonly />'");
+            sb.AppendLine("    + '<button id=\"dpc-eye\" type=\"button\" tabindex=\"-1\">' + svgEyeOff + '</button></div>'");
             sb.AppendLine("    + '<button id=\"dpc-btn\">Войти</button>'");
             sb.AppendLine("    + '<div id=\"dpc-err\"></div>'");
-            sb.AppendLine("    + '</div>'");
-            sb.AppendLine("    + '</div>'");
-            if (!string.IsNullOrEmpty(rightColHtml))
-                sb.AppendLine("    + '" + rightColHtml + "'");
             sb.AppendLine("    + '</div>'");
             sb.AppendLine("    + '</div>';");
             sb.AppendLine();
 
+            // Right column HTML (only if tg + show_qr)
+            if (hasTg && conf.show_qr)
+            {
+                sb.AppendLine("  var tgUrl  = " + jsTgUrl + ";");
+                sb.AppendLine("  var tgName = " + jsTgName + ";");
+                sb.AppendLine("  var rightHtml = ''");
+                sb.AppendLine("    + '<div id=\"dpc-r\">'");
+                sb.AppendLine("    + '<div id=\"dpc-qr-box\"><img src=\"https://api.qrserver.com/v1/create-qr-code/?size=" + qrSize + "x" + qrSize + "&data=' + encodeURIComponent(tgUrl) + '&margin=4\" loading=\"lazy\" /></div>'");
+                sb.AppendLine("    + '<div id=\"dpc-r-info\">'");
+                sb.AppendLine("    + '<div id=\"dpc-qrcap\">' + " + jsQrCap + " + '</div>'");
+                sb.AppendLine("    + '<p id=\"dpc-qrsub\">' + " + jsQrSub + " + '</p>'");
+                sb.AppendLine("    + '<div id=\"dpc-tgname\">' + tgName + '</div>'");
+                sb.AppendLine("    + '<a id=\"dpc-tgbtn\" href=\"' + tgUrl + '\" target=\"_blank\" rel=\"noopener\">' + svgTg + ' ' + " + jsTgBtn + " + '</a>'");
+                sb.AppendLine("    + '</div>'");
+                sb.AppendLine("    + '</div>';");
+            }
+            else
+            {
+                sb.AppendLine("  var rightHtml = '';");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("  var html = '<div id=\"dpc\"><div id=\"dpc-w\">' + leftHtml + rightHtml + '</div></div>';");
             sb.AppendLine("  document.body.insertAdjacentHTML('beforeend', html);");
             sb.AppendLine();
 
@@ -160,11 +162,24 @@ namespace DenyPageCustom
             sb.AppendLine("  var _btn  = document.getElementById('dpc-btn');");
             sb.AppendLine("  var _err  = document.getElementById('dpc-err');");
             sb.AppendLine("  var _wrap = document.getElementById('dpc');");
+            sb.AppendLine("  var _eye  = document.getElementById('dpc-eye');");
+            sb.AppendLine();
+            sb.AppendLine("  setTimeout(function() { _inp.removeAttribute('readonly'); }, 100);");
+            sb.AppendLine();
+            sb.AppendLine("  var _eyeVisible = false;");
+            sb.AppendLine("  _eye.addEventListener('click', function(e) {");
+            sb.AppendLine("    e.preventDefault();");
+            sb.AppendLine("    e.stopPropagation();");
+            sb.AppendLine("    _eyeVisible = !_eyeVisible;");
+            sb.AppendLine("    _inp.type = _eyeVisible ? 'text' : 'password';");
+            sb.AppendLine("    _eye.innerHTML = _eyeVisible ? svgEyeOn : svgEyeOff;");
+            sb.AppendLine("    _inp.focus();");
+            sb.AppendLine("  });");
             sb.AppendLine();
 
             sb.AppendLine("  function keepFocus() {");
             sb.AppendLine("    if (!_inp) return;");
-            sb.AppendLine("    if (document.activeElement !== _inp) _inp.focus();");
+            sb.AppendLine("    if (document.activeElement !== _inp && document.activeElement !== _eye) _inp.focus();");
             sb.AppendLine("  }");
             sb.AppendLine();
 
@@ -247,7 +262,7 @@ namespace DenyPageCustom
 
             sb.AppendLine("  document.addEventListener('keydown', function(e) {");
             sb.AppendLine("    if (!document.getElementById('dpc')) return;");
-            sb.AppendLine("    if (document.activeElement !== _inp && e.key && e.key.length === 1) _inp.focus();");
+            sb.AppendLine("    if (document.activeElement !== _inp && document.activeElement !== _eye && e.key && e.key.length === 1) _inp.focus();");
             sb.AppendLine("  }, true);");
             sb.AppendLine();
 
