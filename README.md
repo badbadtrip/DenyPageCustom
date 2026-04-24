@@ -15,16 +15,10 @@
 
 ## Скриншоты
 
-<table>
-  <tr>
-    <td align="center"><b>Планшет / Desktop</b></td>
-    <td align="center"><b>Мобильный</b></td>
-  </tr>
-  <tr>
-    <td><img src="screenshots/lampac.png" alt="Страница авторизации — планшет" width="440"/></td>
-    <td><img src="screenshots/lampacmob.png" alt="Страница авторизации — телефон" width="230"/></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="screenshots/lampac.png" width="440" alt="Планшет / Desktop">
+  <img src="screenshots/lampacmob.png" width="230" alt="Мобильный">
+</p>
 
 ---
 
@@ -41,35 +35,10 @@
 
 ---
 
-## Архитектура
-
-```
-DenyPageCustom/
-├── manifest.json          # Метаданные плагина для Lampac
-├── ModInit.cs             # Точка входа: IModuleLoaded, таймер, подписка на события
-├── DenyPageGenerator.cs   # Генератор JS-файла (чистый static builder)
-└── Models/
-    └── DenyPageConf.cs    # Модель конфигурации с дефолтами
-```
-
-**`ModInit.cs`** — точка входа (`IModuleLoaded`):
-- При загрузке создаёт директорию вывода, вызывает `SyncAndGenerate()` один раз
-- Подписывается на `EventListener.UpdateInitFile` (обновление `init.conf`)
-- Таймер на 3 секунды — резервный механизм синхронизации
-
-**`DenyPageGenerator.cs`** — статический построитель:
-- `Build(DenyPageConf)` возвращает полное содержимое `deny.js`
-- QR-колонка генерируется только если `tg_target` задан и `show_qr = true`
-
-**`Models/DenyPageConf.cs`** — модель конфигурации:
-- Заполняется через `ModuleInvoke.Init("DenyPage", new DenyPageConf())` из `init.conf`
-- Все поля имеют значения по умолчанию
-
----
-
 ## Установка
 
-Lampac NextGen использует **Roslyn** — `.cs` файлы компилируются сервером автоматически. Предварительная сборка в DLL не требуется.
+> [!NOTE]
+> Lampac NextGen использует **Roslyn** — `.cs` файлы компилируются сервером автоматически. Предварительная сборка в DLL не требуется.
 
 **1.** Скопируйте папку `DenyPageCustom` в директорию `mods/` рядом с исполняемым файлом Lampac:
 
@@ -87,13 +56,17 @@ mods/
 
 **3.** При `"dynamic": true` (уже в `manifest.json`) последующие изменения `.cs` файлов применяются **без перезапуска**.
 
-Файл `plugins/override/deny.js` создаётся автоматически в директории установки сервера.
+> [!TIP]
+> Файл `plugins/override/deny.js` создаётся автоматически в директории установки сервера — редактировать его вручную не нужно, он перезаписывается при каждом изменении конфига.
 
 ---
 
 ## Конфигурация
 
-Параметры задаются в секции `[DenyPage]` файла `init.conf`. Изменения применяются автоматически.
+Параметры задаются в секции `[DenyPage]` файла `init.conf`.
+
+> [!TIP]
+> Изменения применяются автоматически — перезапуск сервера не требуется.
 
 ```json
 "DenyPage": {
@@ -111,6 +84,11 @@ mods/
 ---
 
 ## Поля конфигурации
+
+<details>
+<summary><b>Все поля с описанием</b></summary>
+
+<br>
 
 | Поле | Тип | Описание |
 |---|---|---|
@@ -135,6 +113,9 @@ mods/
 
 ### Форматы `tg_target`
 
+> [!TIP]
+> Все варианты нормализуются автоматически — достаточно указать `@username`.
+
 ```
 @mybotname          →  https://t.me/mybotname
 mybotname           →  https://t.me/mybotname
@@ -142,9 +123,16 @@ https://t.me/bot    →  https://t.me/bot         (без изменений)
 tg://resolve?...    →  tg://resolve?...          (без изменений)
 ```
 
+</details>
+
 ---
 
 ## Логика авторизации
+
+<details>
+<summary><b>Как работает deny.js</b></summary>
+
+<br>
 
 Сгенерированный `deny.js` внедряет две функции:
 
@@ -165,11 +153,48 @@ POST {localhost}/testaccsdb?account_email=<пароль>&uid=<uid>
 | `success = false` | Показывает «Неправильный пароль» |
 | Ошибка сети | Показывает «Ошибка соединения» |
 
-> QR-изображение загружается в runtime с `api.qrserver.com` — не бандлится в плагин.
+> [!NOTE]
+> QR-изображение загружается в runtime с `api.qrserver.com` — не бандлится в плагин. Требуется доступ в интернет на устройстве пользователя.
+
+</details>
 
 ---
 
-## Адаптивная вёрстка
+## Разработка
+
+<details>
+<summary><b>Архитектура</b></summary>
+
+<br>
+
+```
+DenyPageCustom/
+├── manifest.json          # Метаданные плагина для Lampac
+├── ModInit.cs             # Точка входа: IModuleLoaded, таймер, подписка на события
+├── DenyPageGenerator.cs   # Генератор JS-файла (чистый static builder)
+└── Models/
+    └── DenyPageConf.cs    # Модель конфигурации с дефолтами
+```
+
+**`ModInit.cs`** — точка входа (`IModuleLoaded`):
+- При загрузке создаёт директорию вывода, вызывает `SyncAndGenerate()` один раз
+- Подписывается на `EventListener.UpdateInitFile` (обновление `init.conf`)
+- Таймер на 3 секунды — резервный механизм синхронизации
+
+**`DenyPageGenerator.cs`** — статический построитель:
+- `Build(DenyPageConf)` возвращает полное содержимое `deny.js`
+- QR-колонка генерируется только если `tg_target` задан и `show_qr = true`
+
+**`Models/DenyPageConf.cs`** — модель конфигурации:
+- Заполняется через `ModuleInvoke.Init("DenyPage", new DenyPageConf())` из `init.conf`
+- Все поля имеют значения по умолчанию
+
+</details>
+
+<details>
+<summary><b>Адаптивная вёрстка</b></summary>
+
+<br>
 
 | Условие | Поведение |
 |---|---|
@@ -180,9 +205,7 @@ POST {localhost}/testaccsdb?account_email=<пароль>&uid=<uid>
 | Ландшафт (h ≤ 500px) | QR-блок справа (border-left), ширина 220px |
 | Маленький экран (≤ 420px) | Минимальные отступы (24px/20px) |
 
----
-
-## Разработка
+</details>
 
 <details>
 <summary><b>Добавление нового поля конфигурации</b></summary>
