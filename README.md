@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Lampac](https://img.shields.io/badge/Lampac-NextGen-blueviolet?style=flat-square)](https://github.com/lampac-nextgen/lampac)
 [![Platform](https://img.shields.io/badge/platform-Roslyn%20%7C%20.NET-informational?style=flat-square)](https://github.com/lampac-nextgen/lampac)
+[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/badbadtrip/DenyPageCustom)
 
 > Динамический плагин для [Lampac NextGen](https://github.com/lampac-nextgen/lampac) — генерирует кастомную страницу авторизации `plugins/override/deny.js` на основе секции `[DenyPage]` в `init.conf`. Горячая перезагрузка, QR-код Telegram, адаптивная вёрстка.
 
