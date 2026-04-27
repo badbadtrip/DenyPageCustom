@@ -130,7 +130,7 @@ namespace DenyPageCustom
             sb.AppendLine("    + '<p id=\"dpc-hint\">' + " + jsHint + " + '</p>'");
             sb.AppendLine("    + '<div id=\"dpc-iw\">'");
             sb.AppendLine("    + '<div id=\"dpc-inp-wrap\"><span id=\"dpc-inp-icon\">' + svgLock + '</span>'");
-            sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"password\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"new-password\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" readonly />'");
+            sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"password\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"new-password\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" tabindex=\"1\" />'");
             sb.AppendLine("    + '<button id=\"dpc-eye\" type=\"button\" tabindex=\"2\">' + svgEyeOff + '</button></div>'");
             sb.AppendLine("    + '<button id=\"dpc-btn\" tabindex=\"3\">Войти</button>'");
             sb.AppendLine("    + '<div id=\"dpc-err\"></div>'");
@@ -170,8 +170,11 @@ namespace DenyPageCustom
             sb.AppendLine("  var _wrap = document.getElementById('dpc');");
             sb.AppendLine("  var _eye  = document.getElementById('dpc-eye');");
             sb.AppendLine();
-            sb.AppendLine("  setTimeout(function() { _inp.removeAttribute('readonly'); }, 100);");
+            // tvOS: явный фокус при загрузке + обработка virtual keyboard
+            sb.AppendLine("  setTimeout(function() { _inp.focus({ preventScroll: false }); }, 150);");
             sb.AppendLine();
+            // tvOS detection
+            sb.AppendLine("  var isTvOS = /\\bAppleTV\\b/i.test(navigator.userAgent) || /\\bCFNetwork\\b/i.test(navigator.userAgent);");
             sb.AppendLine("  var _eyeVisible = false;");
             sb.AppendLine("  _eye.addEventListener('click', function(e) {");
             sb.AppendLine("    e.preventDefault();");
@@ -179,7 +182,9 @@ namespace DenyPageCustom
             sb.AppendLine("    _eyeVisible = !_eyeVisible;");
             sb.AppendLine("    _inp.type = _eyeVisible ? 'text' : 'password';");
             sb.AppendLine("    _eye.innerHTML = _eyeVisible ? svgEyeOn : svgEyeOff;");
-            sb.AppendLine("    _inp.focus();");
+            sb.AppendLine("    // tvOS: delay before focus to prevent keyboard closing");
+            sb.AppendLine("    if (isTvOS) { setTimeout(function() { _inp.focus({ preventScroll: false }); }, 50); }");
+            sb.AppendLine("    else { _inp.focus(); }");
             sb.AppendLine("  });");
             sb.AppendLine();
 
@@ -197,7 +202,8 @@ namespace DenyPageCustom
             sb.AppendLine("    if (!_inp) return;");
             sb.AppendLine("    var active = document.activeElement;");
             sb.AppendLine("    var managed = _focusables.indexOf(active) !== -1;");
-            sb.AppendLine("    if (!managed) { focusEl(0); }");
+            sb.AppendLine("    // tvOS: не перетягивать фокус если пользователь начал вводить текст");
+            sb.AppendLine("    if (!managed && !(isTvOS && active === _inp)) { focusEl(0); }");
             sb.AppendLine("  }");
             sb.AppendLine();
 
@@ -272,6 +278,23 @@ namespace DenyPageCustom
             sb.AppendLine("  _inp.addEventListener('input', function(e) {");
             sb.AppendLine("    e.stopPropagation();");
             sb.AppendLine("    _err.textContent = '';");
+            sb.AppendLine("  });");
+            sb.AppendLine();
+
+            // tvOS: при попытке blur вернуть фокус — это держит клавиатуру открытой
+            sb.AppendLine("  _inp.addEventListener('blur', function(e) {");
+            sb.AppendLine("    // Если фокус уходит не на кнопку и не на eye — вернуть обратно");
+            sb.AppendLine("    var related = e.relatedTarget;");
+            sb.AppendLine("    if (related !== _btn && related !== _eye) {");
+            sb.AppendLine("      setTimeout(function() { _inp.focus({ preventScroll: false }); }, 10);");
+            sb.AppendLine("    }");
+            sb.AppendLine("  });");
+            sb.AppendLine();
+
+            // tvOS: обработка касаний тач-панели пульта
+            sb.AppendLine("  _inp.addEventListener('touchstart', function(e) {");
+            sb.AppendLine("    e.stopPropagation();");
+            sb.AppendLine("    if (isTvOS) { _inp.focus({ preventScroll: false }); }");
             sb.AppendLine("  });");
             sb.AppendLine();
 
