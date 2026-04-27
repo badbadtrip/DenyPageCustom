@@ -124,7 +124,7 @@ namespace DenyPageCustom
             // Left column HTML
             sb.AppendLine("  var leftHtml = ''");
             sb.AppendLine("    + '<div id=\"dpc-l\">'");
-            sb.AppendLine("    + '<div id=\"dpc-logo\"><span id=\"dpc-logo-next\">NEXTGEN</span></div>'");
+            sb.AppendLine("    + '<div id=\"dpc-logo\"><span id=\"dpc-logo-next\">' + " + jsBadge + " + '</span></div>'");
             sb.AppendLine("    + '<h1 id=\"dpc-title\">' + " + jsTitle + " + '</h1>'");
             sb.AppendLine("    + '<div id=\"dpc-warn\">' + svgWarn + '<span>' + " + jsWarn + " + '</span></div>'");
             sb.AppendLine("    + '<p id=\"dpc-hint\">' + " + jsHint + " + '</p>'");
