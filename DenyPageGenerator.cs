@@ -226,6 +226,10 @@ namespace DenyPageCustom
             sb.AppendLine("      value: '',");
             sb.AppendLine("      nomic: true");
             sb.AppendLine("    }, function(new_value) { doLogin(new_value); });");
+            sb.AppendLine("    // Lampa.Input.edit добавляет свою клавиатуру в конец <body> с z-index ниже,");
+            sb.AppendLine("    // чем у #dpc (99999) — иначе она рендерится под карточкой и выглядит как «ничего не произошло».");
+            sb.AppendLine("    var kb = document.body.lastElementChild;");
+            sb.AppendLine("    if (kb) kb.style.zIndex = '100000';");
             sb.AppendLine("  }");
             sb.AppendLine();
 
