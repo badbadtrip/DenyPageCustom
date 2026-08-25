@@ -97,11 +97,13 @@ namespace DenyPageCustom
             // TV — ограничиваем максимальные размеры
             sb.AppendLine("    '@media(min-width:1400px){#dpc{padding:40px}#dpc-w{max-width:1100px;max-height:85vh;overflow:hidden}#dpc-l{padding:40px 48px;gap:24px;overflow-y:auto}#dpc-r{width:320px;padding:40px 32px;gap:20px;overflow-y:auto}#dpc-qr-box{width:180px;height:180px}}',");
 
-            // TV focus ring — светлая обводка при навигации пультом
-            sb.AppendLine("    '#dpc-inp:focus{border-color:#aaa!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
-            sb.AppendLine("    '#dpc-btn:focus{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
-            sb.AppendLine("    '#dpc-eye:focus{color:#ddd!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;border-radius:6px;outline:none}',");
-            sb.AppendLine("    '#dpc-tgbtn:focus{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
+            // TV focus ring — светлая обводка при навигации пультом.
+            // .dpc-nav — подсветка стрелочной навигации на tvOS БЕЗ реального DOM-фокуса
+            // (на input реальный .focus() откладывается до Select, иначе клавиатура не всплывает).
+            sb.AppendLine("    '#dpc-inp:focus,#dpc-inp.dpc-nav{border-color:#aaa!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+            sb.AppendLine("    '#dpc-btn:focus,#dpc-btn.dpc-nav{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+            sb.AppendLine("    '#dpc-eye:focus,#dpc-eye.dpc-nav{color:#ddd!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;border-radius:6px;outline:none}',");
+            sb.AppendLine("    '#dpc-tgbtn:focus,#dpc-tgbtn.dpc-nav{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
 
             sb.AppendLine("  ].join('');");
             sb.AppendLine("  document.head.appendChild(s);");
@@ -189,11 +191,15 @@ namespace DenyPageCustom
             sb.AppendLine("  var _wrap = document.getElementById('dpc');");
             sb.AppendLine("  var _eye  = document.getElementById('dpc-eye');");
             sb.AppendLine();
-            // tvOS: явный фокус при загрузке + обработка virtual keyboard
-            sb.AppendLine("  setTimeout(function() { _inp.focus({ preventScroll: false }); }, 150);");
-            sb.AppendLine();
             // tvOS detection
             sb.AppendLine("  var isTvOS = /\\bAppleTV\\b/i.test(navigator.userAgent) || /\\bCFNetwork\\b/i.test(navigator.userAgent);");
+            sb.AppendLine();
+            // На обычных платформах можно фокусировать сразу — там нет ограничения WebKit
+            // «клавиатура всплывает только на .focus() внутри настоящего жеста».
+            // На tvOS так делать нельзя: setTimeout не жест, клавиатура не появится,
+            // а активный элемент при этом уже будет считаться «managed» — см. focusEl()/keepFocus() ниже.
+            sb.AppendLine("  if (!isTvOS) { setTimeout(function() { _inp.focus({ preventScroll: false }); }, 150); }");
+            sb.AppendLine();
             sb.AppendLine("  var _eyeVisible = false;");
             sb.AppendLine("  _eye.addEventListener('click', function(e) {");
             sb.AppendLine("    e.preventDefault();");
@@ -210,19 +216,35 @@ namespace DenyPageCustom
             // Focusable элементы для TV-навигации (порядок: input → eye → btn → tgbtn)
             sb.AppendLine("  var _tgbtn = document.getElementById('dpc-tgbtn');");
             sb.AppendLine("  var _focusables = [_inp, _eye, _btn, _tgbtn].filter(function(el){ return !!el; });");
-            sb.AppendLine("  var _focusIdx = 0;");
+            sb.AppendLine("  var _navIdx = 0;");
             sb.AppendLine();
+            sb.AppendLine("  function markNav(idx) {");
+            sb.AppendLine("    _navIdx = (idx + _focusables.length) % _focusables.length;");
+            sb.AppendLine("    for (var i = 0; i < _focusables.length; i++) _focusables[i].classList.remove('dpc-nav');");
+            sb.AppendLine("    _focusables[_navIdx].classList.add('dpc-nav');");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+            // Стрелочная навигация всегда двигает markNav(). Реальный .focus() дёргаем сразу
+            // для всех элементов КРОМЕ input на tvOS — там .focus() должен случиться синхронно
+            // внутри настоящего Select-нажатия (см. обработчик Enter/OK ниже), иначе WebKit
+            // не поднимет системную клавиатуру.
             sb.AppendLine("  function focusEl(idx) {");
-            sb.AppendLine("    _focusIdx = (idx + _focusables.length) % _focusables.length;");
-            sb.AppendLine("    _focusables[_focusIdx].focus();");
+            sb.AppendLine("    markNav(idx);");
+            sb.AppendLine("    var el = _focusables[_navIdx];");
+            sb.AppendLine("    if (isTvOS && el === _inp) return;");
+            sb.AppendLine("    el.focus();");
             sb.AppendLine("  }");
             sb.AppendLine();
             sb.AppendLine("  function keepFocus() {");
             sb.AppendLine("    if (!_inp) return;");
+            sb.AppendLine("    if (isTvOS) {");
+            sb.AppendLine("      var navEl = _focusables[_navIdx];");
+            sb.AppendLine("      if (!navEl || !document.body.contains(navEl)) focusEl(0);");
+            sb.AppendLine("      return;");
+            sb.AppendLine("    }");
             sb.AppendLine("    var active = document.activeElement;");
             sb.AppendLine("    var managed = _focusables.indexOf(active) !== -1;");
-            sb.AppendLine("    // tvOS: не перетягивать фокус если пользователь начал вводить текст");
-            sb.AppendLine("    if (!managed && !(isTvOS && active === _inp)) { focusEl(0); }");
+            sb.AppendLine("    if (!managed) { focusEl(0); }");
             sb.AppendLine("  }");
             sb.AppendLine();
 
@@ -321,25 +343,32 @@ namespace DenyPageCustom
             // повторный клик по уже сфокусированному input должен переотправлять .focus(),
             // иначе keepFocus() видит managed=true и не поднимает клавиатуру.
             sb.AppendLine("  _wrap.addEventListener('click', function(e) {");
-            sb.AppendLine("    if (isTvOS && (e.target === _inp || e.target === _wrap)) { _inp.focus({ preventScroll: false }); }");
-            sb.AppendLine("    else { keepFocus(); }");
+            sb.AppendLine("    if (isTvOS && (e.target === _inp || e.target === _wrap)) {");
+            sb.AppendLine("      markNav(_focusables.indexOf(_inp));");
+            sb.AppendLine("      _inp.focus({ preventScroll: false });");
+            sb.AppendLine("    } else { keepFocus(); }");
             sb.AppendLine("  });");
             sb.AppendLine();
 
             sb.AppendLine("  document.addEventListener('keydown', function(e) {");
             sb.AppendLine("    if (!document.getElementById('dpc')) return;");
             sb.AppendLine("    var key = e.key;");
-            sb.AppendLine("    // Стрелки вверх/вниз — переход между элементами формы");
+            sb.AppendLine("    // Стрелки вверх/вниз — переход между элементами формы (двигают только подсветку)");
             sb.AppendLine("    if (key === 'ArrowDown' || key === 'ArrowRight') {");
             sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      var cur = _focusables.indexOf(document.activeElement);");
-            sb.AppendLine("      focusEl(cur < 0 ? 0 : cur + 1);");
+            sb.AppendLine("      focusEl(_navIdx + 1);");
             sb.AppendLine("      return;");
             sb.AppendLine("    }");
             sb.AppendLine("    if (key === 'ArrowUp' || key === 'ArrowLeft') {");
             sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      var cur2 = _focusables.indexOf(document.activeElement);");
-            sb.AppendLine("      focusEl(cur2 <= 0 ? 0 : cur2 - 1);");
+            sb.AppendLine("      focusEl(_navIdx - 1);");
+            sb.AppendLine("      return;");
+            sb.AppendLine("    }");
+            sb.AppendLine("    // Enter/OK на подсвеченном input — тут и только тут .focus() внутри жеста,");
+            sb.AppendLine("    // это то, что реально поднимает клавиатуру на tvOS.");
+            sb.AppendLine("    if ((key === 'Enter' || key === ' ') && _focusables[_navIdx] === _inp && document.activeElement !== _inp) {");
+            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
+            sb.AppendLine("      _inp.focus({ preventScroll: false });");
             sb.AppendLine("      return;");
             sb.AppendLine("    }");
             sb.AppendLine("    // Enter/OK на кнопке — клик");
