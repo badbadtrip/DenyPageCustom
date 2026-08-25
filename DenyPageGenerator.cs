@@ -87,10 +87,11 @@ namespace DenyPageCustom
             // TV — ограничиваем максимальные размеры
             sb.AppendLine("    '@media(min-width:1400px){#dpc{padding:40px}#dpc-w{max-width:1100px;max-height:85vh;overflow:hidden}#dpc-l{padding:40px 48px;gap:24px;overflow-y:auto}#dpc-r{width:320px;padding:40px 32px;gap:20px;overflow-y:auto}#dpc-qr-box{width:180px;height:180px}}',");
 
-            // TV focus ring — светлая обводка при навигации пультом (.dpc-nav — визуальная подсветка,
-            // без реального DOM-фокуса; ввод пароля делает Lampa.Input.edit, свой WebKit-safe механизм у tvOS)
-            sb.AppendLine("    '#dpc-btn:focus,#dpc-btn.dpc-nav{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
-            sb.AppendLine("    '#dpc-tgbtn:focus,#dpc-tgbtn.dpc-nav{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
+            // TV focus ring — светлая обводка при навигации пультом. ".focus" — класс,
+            // который сам Lampa.Controller вешает на активный элемент коллекции
+            // (см. Controller.collectionFocus ниже), а не наш собственный хак.
+            sb.AppendLine("    '#dpc-btn:focus,#dpc-btn.focus{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+            sb.AppendLine("    '#dpc-tgbtn:focus,#dpc-tgbtn.focus{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
 
             sb.AppendLine("  ].join('');");
             sb.AppendLine("  document.head.appendChild(s);");
@@ -117,7 +118,7 @@ namespace DenyPageCustom
             sb.AppendLine("    + '<div id=\"dpc-warn\">' + svgWarn + '<span id=\"dpc-warn-text\"></span></div>'");
             sb.AppendLine("    + '<p id=\"dpc-hint\"></p>'");
             sb.AppendLine("    + '<div id=\"dpc-iw\">'");
-            sb.AppendLine("    + '<button id=\"dpc-btn\" type=\"button\">Войти</button>'");
+            sb.AppendLine("    + '<button id=\"dpc-btn\" type=\"button\" class=\"selector\">Войти</button>'");
             sb.AppendLine("    + '<div id=\"dpc-err\"></div>'");
             sb.AppendLine("    + '</div>'");
             sb.AppendLine("    + '</div>';");
@@ -135,7 +136,7 @@ namespace DenyPageCustom
                 sb.AppendLine("    + '<div id=\"dpc-qrcap\"></div>'");
                 sb.AppendLine("    + '<p id=\"dpc-qrsub\"></p>'");
                 sb.AppendLine("    + '<div id=\"dpc-tgname\"></div>'");
-                sb.AppendLine("    + '<a id=\"dpc-tgbtn\" target=\"_blank\" rel=\"noopener\">' + svgTg + ' <span id=\"dpc-tgbtn-text\"></span></a>'");
+                sb.AppendLine("    + '<a id=\"dpc-tgbtn\" class=\"selector\" target=\"_blank\" rel=\"noopener\">' + svgTg + ' <span id=\"dpc-tgbtn-text\"></span></a>'");
                 sb.AppendLine("    + '</div>'");
                 sb.AppendLine("    + '</div>';");
             }
@@ -239,13 +240,23 @@ namespace DenyPageCustom
             sb.AppendLine("      nosave: true,");
             sb.AppendLine("      value: '',");
             sb.AppendLine("      nomic: true");
-            sb.AppendLine("    }, function(new_value) { doLogin(new_value); });");
+            sb.AppendLine("    }, function(new_value) {");
+            sb.AppendLine("      // Lampa.Input.edit при закрытии жёстко переключает Controller на 'settings_component'");
+            sb.AppendLine("      // (см. её исходник back()), а не на предыдущий активный — возвращаем сами,");
+            sb.AppendLine("      // иначе после неверного пароля пульт перестаёт попадать на кнопку.");
+            sb.AppendLine("      Lampa.Controller.toggle('dpc_component');");
+            sb.AppendLine("      doLogin(new_value);");
+            sb.AppendLine("    });");
             sb.AppendLine("  }");
             sb.AppendLine();
 
-            sb.AppendLine("  _btn.addEventListener('click', function(e) {");
+            // Кнопки — обычные .selector-элементы. Мышь/тач ловим через click,
+            // а пульт/клавиатуру через 'hover:enter' — jQuery-событие, которым
+            // Lampa.Controller подтверждает выбор активного элемента коллекции
+            // (тот же паттерн, что в стоковом deny.js: html.find('.simple-button').on('hover:enter', ...)).
+            // Обычный addEventListener('click', ...) это событие не поймает.
+            sb.AppendLine("  $(_btn).on('hover:enter click', function(e) {");
             sb.AppendLine("    e.preventDefault();");
-            sb.AppendLine("    e.stopPropagation();");
             sb.AppendLine("    if (_btn.disabled) return;");
             sb.AppendLine("    openInput();");
             sb.AppendLine("  });");
@@ -253,46 +264,29 @@ namespace DenyPageCustom
 
             if (hasTg && conf.show_qr)
             {
-                sb.AppendLine("  if (_tgbtn) { _tgbtn.addEventListener('click', function(e) { e.stopPropagation(); }); }");
+                sb.AppendLine("  if (_tgbtn) {");
+                sb.AppendLine("    $(_tgbtn).on('hover:enter', function(e) {");
+                sb.AppendLine("      e.preventDefault();");
+                sb.AppendLine("      window.open(_tgbtn.href, '_blank', 'noopener');");
+                sb.AppendLine("    });");
+                sb.AppendLine("  }");
                 sb.AppendLine();
             }
 
             // ── TV-навигация между кнопками (Войти / Написать боту) ────────────
-            sb.AppendLine("  var _focusables = [_btn, _tgbtn].filter(function(el){ return !!el; });");
-            sb.AppendLine("  var _navIdx = 0;");
-            sb.AppendLine();
-            sb.AppendLine("  function markNav(idx) {");
-            sb.AppendLine("    _navIdx = (idx + _focusables.length) % _focusables.length;");
-            sb.AppendLine("    for (var i = 0; i < _focusables.length; i++) _focusables[i].classList.remove('dpc-nav');");
-            sb.AppendLine("    _focusables[_navIdx].classList.add('dpc-nav');");
-            sb.AppendLine("    _focusables[_navIdx].focus();");
-            sb.AppendLine("  }");
-            sb.AppendLine();
-            sb.AppendLine("  markNav(0);");
-            sb.AppendLine();
-
-            sb.AppendLine("  document.addEventListener('keydown', function(e) {");
-            sb.AppendLine("    if (!document.getElementById('dpc')) return;");
-            sb.AppendLine("    var key = e.key;");
-            sb.AppendLine("    if (key === 'ArrowDown' || key === 'ArrowRight') {");
-            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      markNav(_navIdx + 1);");
-            sb.AppendLine("      return;");
-            sb.AppendLine("    }");
-            sb.AppendLine("    if (key === 'ArrowUp' || key === 'ArrowLeft') {");
-            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      markNav(_navIdx - 1);");
-            sb.AppendLine("      return;");
-            sb.AppendLine("    }");
-            sb.AppendLine("    if (key === 'Enter' || key === ' ') {");
-            sb.AppendLine("      var el = _focusables[_navIdx];");
-            sb.AppendLine("      if (el === _btn) { e.preventDefault(); e.stopPropagation(); if (!_btn.disabled) openInput(); return; }");
-            sb.AppendLine("      if (el === _tgbtn) {");
-            sb.AppendLine("        e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("        try { _tgbtn.click(); } catch(_) { try { window.location.href = _tgbtn.href; } catch(__) {} }");
-            sb.AppendLine("      }");
-            sb.AppendLine("    }");
-            sb.AppendLine("  }, true);");
+            // Настоящий Lampa.Controller вместо самодельного document-keydown:
+            // collectionSet/collectionFocus сами вычисляют геометрию (влево/вправо/
+            // вверх/вниз) между .selector-элементами внутри #dpc-w, а OK/Enter на
+            // активном элементе сам долетает до него как 'hover:enter' — без ручного
+            // stopPropagation, который раньше глушил и клавиатуру Lampa.Input.edit.
+            sb.AppendLine("  Lampa.Controller.add('dpc_component', {");
+            sb.AppendLine("    toggle: function() {");
+            sb.AppendLine("      Lampa.Controller.collectionSet($('#dpc-w'));");
+            sb.AppendLine("      Lampa.Controller.collectionFocus(false, $('#dpc-w'));");
+            sb.AppendLine("    },");
+            sb.AppendLine("    back: function() {}");
+            sb.AppendLine("  });");
+            sb.AppendLine("  Lampa.Controller.toggle('dpc_component');");
             sb.AppendLine("}");
             sb.AppendLine();
 
