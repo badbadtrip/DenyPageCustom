@@ -122,12 +122,14 @@ namespace DenyPageCustom
             sb.AppendLine();
 
             // Left column HTML
+            // Текстовые узлы оставлены пустыми и заполняются через textContent ниже —
+            // insertAdjacentHTML не должен получать значения из init.conf напрямую (XSS).
             sb.AppendLine("  var leftHtml = ''");
             sb.AppendLine("    + '<div id=\"dpc-l\">'");
-            sb.AppendLine("    + '<div id=\"dpc-logo\"><span id=\"dpc-logo-next\">' + " + jsBadge + " + '</span></div>'");
-            sb.AppendLine("    + '<h1 id=\"dpc-title\">' + " + jsTitle + " + '</h1>'");
-            sb.AppendLine("    + '<div id=\"dpc-warn\">' + svgWarn + '<span>' + " + jsWarn + " + '</span></div>'");
-            sb.AppendLine("    + '<p id=\"dpc-hint\">' + " + jsHint + " + '</p>'");
+            sb.AppendLine("    + '<div id=\"dpc-logo\"><span id=\"dpc-logo-next\"></span></div>'");
+            sb.AppendLine("    + '<h1 id=\"dpc-title\"></h1>'");
+            sb.AppendLine("    + '<div id=\"dpc-warn\">' + svgWarn + '<span id=\"dpc-warn-text\"></span></div>'");
+            sb.AppendLine("    + '<p id=\"dpc-hint\"></p>'");
             sb.AppendLine("    + '<div id=\"dpc-iw\">'");
             sb.AppendLine("    + '<div id=\"dpc-inp-wrap\"><span id=\"dpc-inp-icon\">' + svgLock + '</span>'");
             sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"password\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"new-password\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" tabindex=\"1\" />'");
@@ -147,10 +149,10 @@ namespace DenyPageCustom
                 sb.AppendLine("    + '<div id=\"dpc-r\">'");
                 sb.AppendLine("    + '<div id=\"dpc-qr-box\"><img src=\"https://api.qrserver.com/v1/create-qr-code/?size=" + qrSize + "x" + qrSize + "&data=' + encodeURIComponent(tgUrl) + '&margin=4\" loading=\"lazy\" /></div>'");
                 sb.AppendLine("    + '<div id=\"dpc-r-info\">'");
-                sb.AppendLine("    + '<div id=\"dpc-qrcap\">' + " + jsQrCap + " + '</div>'");
-                sb.AppendLine("    + '<p id=\"dpc-qrsub\">' + " + jsQrSub + " + '</p>'");
-                sb.AppendLine("    + '<div id=\"dpc-tgname\">' + tgName + '</div>'");
-                sb.AppendLine("    + '<a id=\"dpc-tgbtn\" href=\"' + tgUrl + '\" target=\"_blank\" rel=\"noopener\">' + svgTg + ' ' + " + jsTgBtn + " + '</a>'");
+                sb.AppendLine("    + '<div id=\"dpc-qrcap\"></div>'");
+                sb.AppendLine("    + '<p id=\"dpc-qrsub\"></p>'");
+                sb.AppendLine("    + '<div id=\"dpc-tgname\"></div>'");
+                sb.AppendLine("    + '<a id=\"dpc-tgbtn\" target=\"_blank\" rel=\"noopener\">' + svgTg + ' <span id=\"dpc-tgbtn-text\"></span></a>'");
                 sb.AppendLine("    + '</div>'");
                 sb.AppendLine("    + '</div>';");
             }
@@ -163,6 +165,23 @@ namespace DenyPageCustom
             sb.AppendLine("  var html = '<div id=\"dpc\"><div id=\"dpc-w\">' + leftHtml + rightHtml + '</div></div>';");
             sb.AppendLine("  document.body.insertAdjacentHTML('beforeend', html);");
             sb.AppendLine();
+
+            // Текст из init.conf проставляется через textContent/href, а не в разметку —
+            // так браузер сам экранирует HTML-спецсимволы вместо ручного экранирования.
+            sb.AppendLine("  document.getElementById('dpc-logo-next').textContent = " + jsBadge + ";");
+            sb.AppendLine("  document.getElementById('dpc-title').textContent = " + jsTitle + ";");
+            sb.AppendLine("  document.getElementById('dpc-warn-text').textContent = " + jsWarn + ";");
+            sb.AppendLine("  document.getElementById('dpc-hint').textContent = " + jsHint + ";");
+            sb.AppendLine();
+            if (hasTg && conf.show_qr)
+            {
+                sb.AppendLine("  document.getElementById('dpc-qrcap').textContent = " + jsQrCap + ";");
+                sb.AppendLine("  document.getElementById('dpc-qrsub').textContent = " + jsQrSub + ";");
+                sb.AppendLine("  document.getElementById('dpc-tgname').textContent = tgName;");
+                sb.AppendLine("  document.getElementById('dpc-tgbtn-text').textContent = " + jsTgBtn + ";");
+                sb.AppendLine("  document.getElementById('dpc-tgbtn').href = tgUrl;");
+                sb.AppendLine();
+            }
 
             sb.AppendLine("  var _inp  = document.getElementById('dpc-inp');");
             sb.AppendLine("  var _btn  = document.getElementById('dpc-btn');");

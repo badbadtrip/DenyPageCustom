@@ -16,6 +16,7 @@ namespace DenyPageCustom
 
         private static string _lastHash = "";
         private static Timer? _timer;
+        private static readonly object _syncLock = new();
 
         public void Loaded(InitspaceModel baseconf)
         {
@@ -34,18 +35,21 @@ namespace DenyPageCustom
 
         private static void SyncAndGenerate()
         {
-            try
+            lock (_syncLock)
             {
-                var conf = ModuleInvoke.Init("DenyPage", new DenyPageConf());
-                string content = DenyPageGenerator.Build(conf);
-                string hash = content.GetHashCode().ToString();
-                if (hash == _lastHash) return;
-                File.WriteAllText(OverridePath, content, System.Text.Encoding.UTF8);
-                _lastHash = hash;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"DenyPageCustom: {ex.Message}");
+                try
+                {
+                    var conf = ModuleInvoke.Init("DenyPage", new DenyPageConf());
+                    string content = DenyPageGenerator.Build(conf);
+                    string hash = content.GetHashCode().ToString();
+                    if (hash == _lastHash) return;
+                    File.WriteAllText(OverridePath, content, System.Text.Encoding.UTF8);
+                    _lastHash = hash;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"DenyPageCustom: {ex.Message}");
+                }
             }
         }
     }
