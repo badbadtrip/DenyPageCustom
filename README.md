@@ -144,7 +144,7 @@ mods/
   "show_qr": true,
   "page_title": "Вход в систему",
   "page_subtitle": "Для доступа к серверу введите пароль, выданный администратором.",
-  "step1_text": "Введите пароль в поле ниже и нажмите «Войти».",
+  "step1_text": "Нажмите «Войти» и введите пароль.",
   "qr_caption": "Нет пароля?",
   "qr_subcaption": "Отсканируй QR или нажми кнопку, чтобы написать боту.",
   "tg_button_text": "Написать боту"
@@ -201,7 +201,7 @@ tg://resolve?...    →  tg://resolve?...          (без изменений)
 - Скрывает UI (`#app`), устанавливает `window.sync_disable = true`
 - Через 500 мс вызывает `addDevice()`
 
-**`addDevice(message)`** — рендерит полноэкранную форму входа в `document.body`.
+**`addDevice(message)`** — рендерит полноэкранную карточку входа в `document.body`. Кнопка «Войти» открывает `Lampa.Input.edit(...)` — встроенную текстовую клавиатуру Lampa (та же, что использует стоковый `deny.js`), а не самодельный HTML `<input>`. Она уже умеет работать на Apple TV/tvOS и других TV-платформах без ручных фокус-хаков.
 
 ```
 POST {localhost}/testaccsdb?account_email=<пароль>&uid=<uid>
@@ -287,7 +287,7 @@ DenyPageCustom/
 ```
 deny.js
 ├── CSS (инлайн, через <style>)
-├── SVG-иконки как JS-переменные (warn, lock, eye, tg)
+├── SVG-иконки как JS-переменные (warn, tg)
 ├── function addDevice(message)   — форма входа + обработчики
 └── function checkAutch()         — проверка авторизации + вызов addDevice
     └── checkAutch();             — немедленный вызов в конце файла

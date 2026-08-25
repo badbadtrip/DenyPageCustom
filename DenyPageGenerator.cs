@@ -16,14 +16,14 @@ namespace DenyPageCustom
             string jsBadge  = Js(string.IsNullOrWhiteSpace(conf.page_badge)     ? "Lampac NextGen" : conf.page_badge);
             string jsTitle  = Js(string.IsNullOrWhiteSpace(conf.page_title)     ? "Вход в Lampa" : conf.page_title);
             string jsWarn   = Js(string.IsNullOrWhiteSpace(conf.page_subtitle)  ? "Доступ ограничен. Пароль можно получить у администратора." : conf.page_subtitle);
-            string jsHint   = Js(string.IsNullOrWhiteSpace(conf.step1_text)     ? "Введите пароль в поле ниже и нажмите «Войти»." : conf.step1_text);
+            string jsHint   = Js(string.IsNullOrWhiteSpace(conf.step1_text)     ? "Нажмите «Войти» и введите пароль." : conf.step1_text);
             string jsQrCap  = Js(string.IsNullOrWhiteSpace(conf.qr_caption)     ? "Нет пароля?" : conf.qr_caption);
             string jsQrSub  = Js(string.IsNullOrWhiteSpace(conf.qr_subcaption)  ? "Отсканируй QR или нажми кнопку, чтобы написать боту." : conf.qr_subcaption);
             string jsTgBtn  = Js(string.IsNullOrWhiteSpace(conf.tg_button_text) ? "Открыть Telegram" : conf.tg_button_text);
             string jsTgName = Js(string.IsNullOrWhiteSpace(conf.tg_target)      ? "" : conf.tg_target);
 
             var sb = new StringBuilder();
-            sb.AppendLine("// DenyPageCustom v3.0 - auto-generated from init.conf[DenyPage]");
+            sb.AppendLine("// DenyPageCustom v4.0 - auto-generated from init.conf[DenyPage]");
             sb.AppendLine("// DO NOT EDIT - overwritten on config reload.");
             sb.AppendLine();
             sb.AppendLine("var network = new Lampa.Reguest();");
@@ -57,18 +57,8 @@ namespace DenyPageCustom
             // Hint
             sb.AppendLine("    '#dpc-hint{font-size:13.5px;color:#808080;line-height:1.6;margin:0}',");
 
-            // Divider
-            sb.AppendLine("    '#dpc-sep{height:1px;background:#2a2a2a;width:100%}',");
-
             // Form
             sb.AppendLine("    '#dpc-iw{display:flex;flex-direction:column;gap:12px}',");
-            sb.AppendLine("    '#dpc-inp-wrap{position:relative}',");
-            sb.AppendLine("    '#dpc-inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex}',");
-            sb.AppendLine("    '#dpc-inp{width:100%;box-sizing:border-box;padding:14px 44px 14px 42px;background:#141516;border:1px solid #2e2f32;border-radius:10px;color:#ececec;font-family:inherit;font-size:14px;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}',");
-            sb.AppendLine("    '#dpc-inp::placeholder{color:#555}',");
-            sb.AppendLine("    '#dpc-inp:focus{border-color:#666;box-shadow:0 0 0 3px rgba(255,255,255,.05)}',");
-            sb.AppendLine("    '#dpc-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;color:#555;transition:color .2s}',");
-            sb.AppendLine("    '#dpc-eye:hover{color:#999}',");
             sb.AppendLine("    '#dpc-btn{width:100%;padding:14px;background:#2c2d30;color:#d8d8d8;border:1px solid #3a3b3e;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.3px;transition:background .2s,border-color .2s,transform .1s}',");
             sb.AppendLine("    '#dpc-btn:disabled{opacity:.3;cursor:default;transform:none}',");
             sb.AppendLine("    '@media(hover:hover) and (pointer:fine){#dpc-btn:not(:disabled):hover{background:#353639;border-color:#444}#dpc-btn:not(:disabled):active{transform:scale(.98)}}',");
@@ -97,12 +87,9 @@ namespace DenyPageCustom
             // TV — ограничиваем максимальные размеры
             sb.AppendLine("    '@media(min-width:1400px){#dpc{padding:40px}#dpc-w{max-width:1100px;max-height:85vh;overflow:hidden}#dpc-l{padding:40px 48px;gap:24px;overflow-y:auto}#dpc-r{width:320px;padding:40px 32px;gap:20px;overflow-y:auto}#dpc-qr-box{width:180px;height:180px}}',");
 
-            // TV focus ring — светлая обводка при навигации пультом.
-            // .dpc-nav — подсветка стрелочной навигации на tvOS БЕЗ реального DOM-фокуса
-            // (на input реальный .focus() откладывается до Select, иначе клавиатура не всплывает).
-            sb.AppendLine("    '#dpc-inp:focus,#dpc-inp.dpc-nav{border-color:#aaa!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+            // TV focus ring — светлая обводка при навигации пультом (.dpc-nav — визуальная подсветка,
+            // без реального DOM-фокуса; ввод пароля делает Lampa.Input.edit, свой WebKit-safe механизм у tvOS)
             sb.AppendLine("    '#dpc-btn:focus,#dpc-btn.dpc-nav{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
-            sb.AppendLine("    '#dpc-eye:focus,#dpc-eye.dpc-nav{color:#ddd!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;border-radius:6px;outline:none}',");
             sb.AppendLine("    '#dpc-tgbtn:focus,#dpc-tgbtn.dpc-nav{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
 
             sb.AppendLine("  ].join('');");
@@ -117,9 +104,6 @@ namespace DenyPageCustom
 
             // SVG icons as JS variables
             sb.AppendLine("  var svgWarn = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#909090\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"flex-shrink:0;width:18px;height:18px\"><path d=\"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>';");
-            sb.AppendLine("  var svgLock = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#555\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:18px;height:18px\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0110 0v4\"/></svg>';");
-            sb.AppendLine("  var svgEyeOff = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94\"/><path d=\"M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19\"/><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"/></svg>';");
-            sb.AppendLine("  var svgEyeOn  = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>';");
             sb.AppendLine("  var svgTg   = '<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"width:18px;height:18px\"><circle cx=\"12\" cy=\"12\" r=\"12\" fill=\"#d0d0d0\"/><path d=\"M17.5 7.5l-2.2 10.4c-.16.72-.6.9-1.22.56l-3.36-2.48-1.62 1.56c-.18.18-.33.33-.67.33l.24-3.4 6.17-5.57c.27-.24-.06-.37-.41-.14L6.3 13.86l-3.28-1.03c-.71-.22-.73-.71.15-1.05l12.82-4.94c.59-.21 1.1.14.51 1.66z\" fill=\"#1e1f21\"/></svg>';");
             sb.AppendLine();
 
@@ -133,10 +117,7 @@ namespace DenyPageCustom
             sb.AppendLine("    + '<div id=\"dpc-warn\">' + svgWarn + '<span id=\"dpc-warn-text\"></span></div>'");
             sb.AppendLine("    + '<p id=\"dpc-hint\"></p>'");
             sb.AppendLine("    + '<div id=\"dpc-iw\">'");
-            sb.AppendLine("    + '<div id=\"dpc-inp-wrap\"><span id=\"dpc-inp-icon\">' + svgLock + '</span>'");
-            sb.AppendLine("    + '<input id=\"dpc-inp\" type=\"password\" inputmode=\"text\" placeholder=\"Введите пароль\" autocomplete=\"new-password\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" tabindex=\"1\" />'");
-            sb.AppendLine("    + '<button id=\"dpc-eye\" type=\"button\" tabindex=\"2\">' + svgEyeOff + '</button></div>'");
-            sb.AppendLine("    + '<button id=\"dpc-btn\" tabindex=\"3\">Войти</button>'");
+            sb.AppendLine("    + '<button id=\"dpc-btn\" type=\"button\">Войти</button>'");
             sb.AppendLine("    + '<div id=\"dpc-err\"></div>'");
             sb.AppendLine("    + '</div>'");
             sb.AppendLine("    + '</div>';");
@@ -185,77 +166,14 @@ namespace DenyPageCustom
                 sb.AppendLine();
             }
 
-            sb.AppendLine("  var _inp  = document.getElementById('dpc-inp');");
             sb.AppendLine("  var _btn  = document.getElementById('dpc-btn');");
             sb.AppendLine("  var _err  = document.getElementById('dpc-err');");
-            sb.AppendLine("  var _wrap = document.getElementById('dpc');");
-            sb.AppendLine("  var _eye  = document.getElementById('dpc-eye');");
-            sb.AppendLine();
-            // tvOS detection
-            sb.AppendLine("  var isTvOS = /\\bAppleTV\\b/i.test(navigator.userAgent) || /\\bCFNetwork\\b/i.test(navigator.userAgent);");
-            sb.AppendLine();
-            // На обычных платформах можно фокусировать сразу — там нет ограничения WebKit
-            // «клавиатура всплывает только на .focus() внутри настоящего жеста».
-            // На tvOS так делать нельзя: setTimeout не жест, клавиатура не появится,
-            // а активный элемент при этом уже будет считаться «managed» — см. focusEl()/keepFocus() ниже.
-            sb.AppendLine("  if (!isTvOS) { setTimeout(function() { _inp.focus({ preventScroll: false }); }, 150); }");
-            sb.AppendLine();
-            sb.AppendLine("  var _eyeVisible = false;");
-            sb.AppendLine("  _eye.addEventListener('click', function(e) {");
-            sb.AppendLine("    e.preventDefault();");
-            sb.AppendLine("    e.stopPropagation();");
-            sb.AppendLine("    _eyeVisible = !_eyeVisible;");
-            sb.AppendLine("    _inp.type = _eyeVisible ? 'text' : 'password';");
-            sb.AppendLine("    _eye.innerHTML = _eyeVisible ? svgEyeOn : svgEyeOff;");
-            sb.AppendLine("    // tvOS: delay before focus to prevent keyboard closing");
-            sb.AppendLine("    if (isTvOS) { setTimeout(function() { _inp.focus({ preventScroll: false }); }, 50); }");
-            sb.AppendLine("    else { _inp.focus(); }");
-            sb.AppendLine("  });");
-            sb.AppendLine();
-
-            // Focusable элементы для TV-навигации (порядок: input → eye → btn → tgbtn)
             sb.AppendLine("  var _tgbtn = document.getElementById('dpc-tgbtn');");
-            sb.AppendLine("  var _focusables = [_inp, _eye, _btn, _tgbtn].filter(function(el){ return !!el; });");
-            sb.AppendLine("  var _navIdx = 0;");
-            sb.AppendLine();
-            sb.AppendLine("  function markNav(idx) {");
-            sb.AppendLine("    _navIdx = (idx + _focusables.length) % _focusables.length;");
-            sb.AppendLine("    for (var i = 0; i < _focusables.length; i++) _focusables[i].classList.remove('dpc-nav');");
-            sb.AppendLine("    _focusables[_navIdx].classList.add('dpc-nav');");
-            sb.AppendLine("  }");
-            sb.AppendLine();
-            // Стрелочная навигация всегда двигает markNav(). Реальный .focus() дёргаем сразу
-            // для всех элементов КРОМЕ input на tvOS — там .focus() должен случиться синхронно
-            // внутри настоящего Select-нажатия (см. обработчик Enter/OK ниже), иначе WebKit
-            // не поднимет системную клавиатуру.
-            sb.AppendLine("  function focusEl(idx) {");
-            sb.AppendLine("    markNav(idx);");
-            sb.AppendLine("    var el = _focusables[_navIdx];");
-            sb.AppendLine("    if (isTvOS && el === _inp) return;");
-            sb.AppendLine("    el.focus();");
-            sb.AppendLine("  }");
-            sb.AppendLine();
-            sb.AppendLine("  function keepFocus() {");
-            sb.AppendLine("    if (!_inp) return;");
-            sb.AppendLine("    if (isTvOS) {");
-            sb.AppendLine("      var navEl = _focusables[_navIdx];");
-            sb.AppendLine("      if (!navEl || !document.body.contains(navEl)) focusEl(0);");
-            sb.AppendLine("      return;");
-            sb.AppendLine("    }");
-            sb.AppendLine("    var active = document.activeElement;");
-            sb.AppendLine("    var managed = _focusables.indexOf(active) !== -1;");
-            sb.AppendLine("    if (!managed) { focusEl(0); }");
-            sb.AppendLine("  }");
             sb.AppendLine();
 
-            sb.AppendLine("  function doLogin() {");
-            sb.AppendLine("    var val = _inp.value;");
-            sb.AppendLine("    if (!val) {");
-            sb.AppendLine("      _err.style.color = '#d95f5f';");
-            sb.AppendLine("      _err.textContent = 'Введите пароль';");
-            sb.AppendLine("      keepFocus();");
-            sb.AppendLine("      return;");
-            sb.AppendLine("    }");
+            // ── doLogin ──────────────────────────────────────────────────────
+            sb.AppendLine("  function doLogin(val) {");
+            sb.AppendLine("    if (!val) return;");
             sb.AppendLine();
             sb.AppendLine("    _btn.disabled = true;");
             sb.AppendLine("    _btn.textContent = '...';");
@@ -286,106 +204,81 @@ namespace DenyPageCustom
             sb.AppendLine("        _err.textContent = 'Неправильный пароль';");
             sb.AppendLine("        _btn.disabled = false;");
             sb.AppendLine("        _btn.textContent = 'Войти';");
-            sb.AppendLine("        keepFocus();");
             sb.AppendLine("      }");
             sb.AppendLine("    }, function() {");
             sb.AppendLine("      _err.style.color = '#d95f5f';");
             sb.AppendLine("      _err.textContent = 'Ошибка соединения';");
             sb.AppendLine("      _btn.disabled = false;");
             sb.AppendLine("      _btn.textContent = 'Войти';");
-            sb.AppendLine("      keepFocus();");
             sb.AppendLine("    }, { code: val });");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+
+            // ── openInput ────────────────────────────────────────────────────
+            // Тот же Lampa.Input.edit, что использует стоковый deny.js — это встроенная
+            // в Lampa текстовая клавиатура (не нативный HTML input), она уже умеет
+            // работать на Apple TV/tvOS и других TV-платформах без наших ручных хаков.
+            sb.AppendLine("  function openInput() {");
+            sb.AppendLine("    Lampa.Input.edit({");
+            sb.AppendLine("      free: true,");
+            sb.AppendLine("      title: 'Введите пароль',");
+            sb.AppendLine("      nosave: true,");
+            sb.AppendLine("      value: '',");
+            sb.AppendLine("      nomic: true");
+            sb.AppendLine("    }, function(new_value) { doLogin(new_value); });");
             sb.AppendLine("  }");
             sb.AppendLine();
 
             sb.AppendLine("  _btn.addEventListener('click', function(e) {");
             sb.AppendLine("    e.preventDefault();");
             sb.AppendLine("    e.stopPropagation();");
-            sb.AppendLine("    doLogin();");
+            sb.AppendLine("    if (_btn.disabled) return;");
+            sb.AppendLine("    openInput();");
             sb.AppendLine("  });");
             sb.AppendLine();
 
-            sb.AppendLine("  _inp.addEventListener('keydown', function(e) {");
-            sb.AppendLine("    e.stopPropagation();");
-            sb.AppendLine("    if (e.key === 'Enter') { e.preventDefault(); doLogin(); }");
-            sb.AppendLine("  });");
-            sb.AppendLine();
+            if (hasTg && conf.show_qr)
+            {
+                sb.AppendLine("  if (_tgbtn) { _tgbtn.addEventListener('click', function(e) { e.stopPropagation(); }); }");
+                sb.AppendLine();
+            }
 
-            sb.AppendLine("  _inp.addEventListener('keyup',    function(e) { e.stopPropagation(); });");
-            sb.AppendLine("  _inp.addEventListener('keypress', function(e) { e.stopPropagation(); });");
-            sb.AppendLine("  _inp.addEventListener('click',    function(e) { e.stopPropagation(); });");
+            // ── TV-навигация между кнопками (Войти / Написать боту) ────────────
+            sb.AppendLine("  var _focusables = [_btn, _tgbtn].filter(function(el){ return !!el; });");
+            sb.AppendLine("  var _navIdx = 0;");
             sb.AppendLine();
-
-            sb.AppendLine("  _inp.addEventListener('input', function(e) {");
-            sb.AppendLine("    e.stopPropagation();");
-            sb.AppendLine("    _err.textContent = '';");
-            sb.AppendLine("  });");
+            sb.AppendLine("  function markNav(idx) {");
+            sb.AppendLine("    _navIdx = (idx + _focusables.length) % _focusables.length;");
+            sb.AppendLine("    for (var i = 0; i < _focusables.length; i++) _focusables[i].classList.remove('dpc-nav');");
+            sb.AppendLine("    _focusables[_navIdx].classList.add('dpc-nav');");
+            sb.AppendLine("    _focusables[_navIdx].focus();");
+            sb.AppendLine("  }");
             sb.AppendLine();
-
-            // tvOS: при попытке blur вернуть фокус — это держит клавиатуру открытой
-            sb.AppendLine("  _inp.addEventListener('blur', function(e) {");
-            sb.AppendLine("    // Если фокус уходит не на кнопку и не на eye — вернуть обратно");
-            sb.AppendLine("    var related = e.relatedTarget;");
-            sb.AppendLine("    if (related !== _btn && related !== _eye) {");
-            sb.AppendLine("      setTimeout(function() { _inp.focus({ preventScroll: false }); }, 10);");
-            sb.AppendLine("    }");
-            sb.AppendLine("  });");
-            sb.AppendLine();
-
-            // tvOS: обработка касаний тач-панели пульта
-            sb.AppendLine("  _inp.addEventListener('touchstart', function(e) {");
-            sb.AppendLine("    e.stopPropagation();");
-            sb.AppendLine("    if (isTvOS) { _inp.focus({ preventScroll: false }); }");
-            sb.AppendLine("  });");
-            sb.AppendLine();
-
-            // tvOS: клавиатура поднимается только на .focus() внутри настоящего жеста —
-            // повторный клик по уже сфокусированному input должен переотправлять .focus(),
-            // иначе keepFocus() видит managed=true и не поднимает клавиатуру.
-            sb.AppendLine("  _wrap.addEventListener('click', function(e) {");
-            sb.AppendLine("    if (isTvOS && (e.target === _inp || e.target === _wrap)) {");
-            sb.AppendLine("      markNav(_focusables.indexOf(_inp));");
-            sb.AppendLine("      _inp.focus({ preventScroll: false });");
-            sb.AppendLine("    } else { keepFocus(); }");
-            sb.AppendLine("  });");
+            sb.AppendLine("  markNav(0);");
             sb.AppendLine();
 
             sb.AppendLine("  document.addEventListener('keydown', function(e) {");
             sb.AppendLine("    if (!document.getElementById('dpc')) return;");
             sb.AppendLine("    var key = e.key;");
-            sb.AppendLine("    // Стрелки вверх/вниз — переход между элементами формы (двигают только подсветку)");
             sb.AppendLine("    if (key === 'ArrowDown' || key === 'ArrowRight') {");
             sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      focusEl(_navIdx + 1);");
+            sb.AppendLine("      markNav(_navIdx + 1);");
             sb.AppendLine("      return;");
             sb.AppendLine("    }");
             sb.AppendLine("    if (key === 'ArrowUp' || key === 'ArrowLeft') {");
             sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      focusEl(_navIdx - 1);");
+            sb.AppendLine("      markNav(_navIdx - 1);");
             sb.AppendLine("      return;");
             sb.AppendLine("    }");
-            sb.AppendLine("    // Enter/OK на подсвеченном input — тут и только тут .focus() внутри жеста,");
-            sb.AppendLine("    // это то, что реально поднимает клавиатуру на tvOS.");
-            sb.AppendLine("    if ((key === 'Enter' || key === ' ') && _focusables[_navIdx] === _inp && document.activeElement !== _inp) {");
-            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      _inp.focus({ preventScroll: false });");
-            sb.AppendLine("      return;");
-            sb.AppendLine("    }");
-            sb.AppendLine("    // Enter/OK на кнопке — клик");
-            sb.AppendLine("    if ((key === 'Enter' || key === ' ') && document.activeElement === _btn) {");
-            sb.AppendLine("      e.preventDefault(); e.stopPropagation();");
-            sb.AppendLine("      doLogin();");
-            sb.AppendLine("      return;");
-            sb.AppendLine("    }");
-            sb.AppendLine("    // Любой печатаемый символ — перевести фокус на input");
-            sb.AppendLine("    if (document.activeElement !== _inp && document.activeElement !== _eye && key && key.length === 1) {");
-            sb.AppendLine("      focusEl(0);");
+            sb.AppendLine("    if (key === 'Enter' || key === ' ') {");
+            sb.AppendLine("      var el = _focusables[_navIdx];");
+            sb.AppendLine("      if (el === _btn) { e.preventDefault(); e.stopPropagation(); if (!_btn.disabled) openInput(); return; }");
+            sb.AppendLine("      if (el === _tgbtn) {");
+            sb.AppendLine("        e.preventDefault(); e.stopPropagation();");
+            sb.AppendLine("        try { _tgbtn.click(); } catch(_) { try { window.location.href = _tgbtn.href; } catch(__) {} }");
+            sb.AppendLine("      }");
             sb.AppendLine("    }");
             sb.AppendLine("  }, true);");
-            sb.AppendLine();
-
-            sb.AppendLine("  setTimeout(keepFocus, 150);");
-            sb.AppendLine("  setTimeout(keepFocus, 500);");
             sb.AppendLine("}");
             sb.AppendLine();
 
