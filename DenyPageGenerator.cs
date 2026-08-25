@@ -219,6 +219,20 @@ namespace DenyPageCustom
             // в Lampa текстовая клавиатура (не нативный HTML input), она уже умеет
             // работать на Apple TV/tvOS и других TV-платформах без наших ручных хаков.
             sb.AppendLine("  function openInput() {");
+            sb.AppendLine("    // Lampa.Input.edit добавляет свою клавиатуру в конец <body> с z-index ниже,");
+            sb.AppendLine("    // чем у #dpc (99999) — иначе она рендерится под карточкой и выглядит как «ничего не произошло».");
+            sb.AppendLine("    // Вставка не гарантированно синхронна (может случиться на следующем тике/анимации),");
+            sb.AppendLine("    // поэтому вместо чтения lastElementChild сразу после вызова слушаем появление узла.");
+            sb.AppendLine("    var mo = new MutationObserver(function(muts) {");
+            sb.AppendLine("      for (var i = 0; i < muts.length; i++) {");
+            sb.AppendLine("        var added = muts[i].addedNodes;");
+            sb.AppendLine("        for (var j = 0; j < added.length; j++) {");
+            sb.AppendLine("          if (added[j].nodeType === 1) added[j].style.zIndex = '100000';");
+            sb.AppendLine("        }");
+            sb.AppendLine("      }");
+            sb.AppendLine("      mo.disconnect();");
+            sb.AppendLine("    });");
+            sb.AppendLine("    mo.observe(document.body, { childList: true });");
             sb.AppendLine("    Lampa.Input.edit({");
             sb.AppendLine("      free: true,");
             sb.AppendLine("      title: 'Введите пароль',");
@@ -226,10 +240,6 @@ namespace DenyPageCustom
             sb.AppendLine("      value: '',");
             sb.AppendLine("      nomic: true");
             sb.AppendLine("    }, function(new_value) { doLogin(new_value); });");
-            sb.AppendLine("    // Lampa.Input.edit добавляет свою клавиатуру в конец <body> с z-index ниже,");
-            sb.AppendLine("    // чем у #dpc (99999) — иначе она рендерится под карточкой и выглядит как «ничего не произошло».");
-            sb.AppendLine("    var kb = document.body.lastElementChild;");
-            sb.AppendLine("    if (kb) kb.style.zIndex = '100000';");
             sb.AppendLine("  }");
             sb.AppendLine();
 
