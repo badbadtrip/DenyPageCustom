@@ -317,7 +317,13 @@ namespace DenyPageCustom
             sb.AppendLine("  });");
             sb.AppendLine();
 
-            sb.AppendLine("  _wrap.addEventListener('click', function() { keepFocus(); });");
+            // tvOS: клавиатура поднимается только на .focus() внутри настоящего жеста —
+            // повторный клик по уже сфокусированному input должен переотправлять .focus(),
+            // иначе keepFocus() видит managed=true и не поднимает клавиатуру.
+            sb.AppendLine("  _wrap.addEventListener('click', function(e) {");
+            sb.AppendLine("    if (isTvOS && (e.target === _inp || e.target === _wrap)) { _inp.focus({ preventScroll: false }); }");
+            sb.AppendLine("    else { keepFocus(); }");
+            sb.AppendLine("  });");
             sb.AppendLine();
 
             sb.AppendLine("  document.addEventListener('keydown', function(e) {");
