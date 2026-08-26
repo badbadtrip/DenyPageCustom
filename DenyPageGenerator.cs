@@ -183,10 +183,13 @@ namespace DenyPageCustom
             sb.AppendLine("    function check() {");
             sb.AppendLine("      tries++;");
             sb.AppendLine("      var u = '{localhost}/testaccsdb';");
-            sb.AppendLine("      var email = Lampa.Storage.get('account_email');");
-            sb.AppendLine("      if (email) u = Lampa.Utils.addUrlComponent(u, 'account_email=' + encodeURIComponent(email));");
             sb.AppendLine("      var uid = Lampa.Storage.get('lampac_unic_id', '');");
-            sb.AppendLine("      if (uid) u = Lampa.Utils.addUrlComponent(u, 'uid=' + encodeURIComponent(uid));");
+            sb.AppendLine("      if (uid) {");
+            sb.AppendLine("        u = Lampa.Utils.addUrlComponent(u, 'uid=' + encodeURIComponent(uid));");
+            sb.AppendLine("      } else {");
+            sb.AppendLine("        var email = Lampa.Storage.get('account_email');");
+            sb.AppendLine("        if (email) u = Lampa.Utils.addUrlComponent(u, 'account_email=' + encodeURIComponent(email));");
+            sb.AppendLine("      }");
             sb.AppendLine("      var probe = new Lampa.Reguest();");
             sb.AppendLine("      probe.silent(u, function(res) {");
             sb.AppendLine("        if (!res.accsdb || tries >= 10) cb();");
@@ -324,10 +327,13 @@ namespace DenyPageCustom
             // ── checkAutch ───────────────────────────────────────────────────
             sb.AppendLine("function checkAutch() {");
             sb.AppendLine("  var url = '{localhost}/testaccsdb';");
-            sb.AppendLine("  var email = Lampa.Storage.get('account_email');");
-            sb.AppendLine("  if (email) url = Lampa.Utils.addUrlComponent(url, 'account_email=' + encodeURIComponent(email));");
             sb.AppendLine("  var uid = Lampa.Storage.get('lampac_unic_id', '');");
-            sb.AppendLine("  if (uid) url = Lampa.Utils.addUrlComponent(url, 'uid=' + encodeURIComponent(uid));");
+            sb.AppendLine("  if (uid) {");
+            sb.AppendLine("    url = Lampa.Utils.addUrlComponent(url, 'uid=' + encodeURIComponent(uid));");
+            sb.AppendLine("  } else {");
+            sb.AppendLine("    var email = Lampa.Storage.get('account_email');");
+            sb.AppendLine("    if (email) url = Lampa.Utils.addUrlComponent(url, 'account_email=' + encodeURIComponent(email));");
+            sb.AppendLine("  }");
             sb.AppendLine("  var token = '{token}';");
             sb.AppendLine("  if (token) url = Lampa.Utils.addUrlComponent(url, 'token={token}');");
             sb.AppendLine("  network.silent(url, function(res) {");
