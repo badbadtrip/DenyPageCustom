@@ -172,6 +172,31 @@ namespace DenyPageCustom
             sb.AppendLine("  var _tgbtn = document.getElementById('dpc-tgbtn');");
             sb.AppendLine();
 
+            // ── waitAuthorized ──────────────────────────────────────────────────
+            // После успешного логина сервер не всегда успевает применить сессию/cookie
+            // к моменту, когда мы делаем location.href='/' — следующий testaccsdb на
+            // главной иногда всё ещё видит accsdb:true, и страница входа мелькает снова.
+            // Вместо гадания с фиксированной задержкой — реально дожидаемся accsdb:false,
+            // опрашивая тот же {localhost}/testaccsdb, прежде чем редиректить.
+            sb.AppendLine("  function waitAuthorized(cb) {");
+            sb.AppendLine("    var tries = 0;");
+            sb.AppendLine("    function check() {");
+            sb.AppendLine("      tries++;");
+            sb.AppendLine("      var u = '{localhost}/testaccsdb';");
+            sb.AppendLine("      var email = Lampa.Storage.get('account_email');");
+            sb.AppendLine("      if (email) u = Lampa.Utils.addUrlComponent(u, 'account_email=' + encodeURIComponent(email));");
+            sb.AppendLine("      var uid = Lampa.Storage.get('lampac_unic_id', '');");
+            sb.AppendLine("      if (uid) u = Lampa.Utils.addUrlComponent(u, 'uid=' + encodeURIComponent(uid));");
+            sb.AppendLine("      var probe = new Lampa.Reguest();");
+            sb.AppendLine("      probe.silent(u, function(res) {");
+            sb.AppendLine("        if (!res.accsdb || tries >= 10) cb();");
+            sb.AppendLine("        else setTimeout(check, 250);");
+            sb.AppendLine("      }, function() { cb(); });");
+            sb.AppendLine("    }");
+            sb.AppendLine("    check();");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+
             // ── doLogin ──────────────────────────────────────────────────────
             sb.AppendLine("  function doLogin(val) {");
             sb.AppendLine("    if (!val) return;");
@@ -192,13 +217,17 @@ namespace DenyPageCustom
             sb.AppendLine("          _err.textContent = 'Аккаунт создан. Пароль: ' + result.uid;");
             sb.AppendLine("          Lampa.Storage.set('lampac_unic_id', result.uid);");
             sb.AppendLine("          setTimeout(function() {");
-            sb.AppendLine("            localStorage.removeItem('activity');");
-            sb.AppendLine("            window.location.href = '/';");
+            sb.AppendLine("            waitAuthorized(function() {");
+            sb.AppendLine("              localStorage.removeItem('activity');");
+            sb.AppendLine("              window.location.href = '/';");
+            sb.AppendLine("            });");
             sb.AppendLine("          }, 3000);");
             sb.AppendLine("        } else {");
             sb.AppendLine("          Lampa.Storage.set('lampac_unic_id', val);");
-            sb.AppendLine("          localStorage.removeItem('activity');");
-            sb.AppendLine("          window.location.href = '/';");
+            sb.AppendLine("          waitAuthorized(function() {");
+            sb.AppendLine("            localStorage.removeItem('activity');");
+            sb.AppendLine("            window.location.href = '/';");
+            sb.AppendLine("          });");
             sb.AppendLine("        }");
             sb.AppendLine("      } else {");
             sb.AppendLine("        _err.style.color = '#d95f5f';");
@@ -250,12 +279,14 @@ namespace DenyPageCustom
             sb.AppendLine("  }");
             sb.AppendLine();
 
-            // Кнопки — обычные .selector-элементы. Мышь/тач ловим через click,
-            // а пульт/клавиатуру через 'hover:enter' — jQuery-событие, которым
-            // Lampa.Controller подтверждает выбор активного элемента коллекции
-            // (тот же паттерн, что в стоковом deny.js: html.find('.simple-button').on('hover:enter', ...)).
-            // Обычный addEventListener('click', ...) это событие не поймает.
-            sb.AppendLine("  $(_btn).on('hover:enter click', function(e) {");
+            // Кнопки — обычные .selector-элементы. Lampa.Controller сам вешает MutationObserver
+            // на любой .selector в DOM (controller.js: bindEvents) и транслирует нативный click
+            // в 'hover:enter' с задержкой ~20мс — этим событием подтверждается выбор что с мыши/тача,
+            // что с пульта (тот же паттерн, что в стоковом deny.js: .on('hover:enter', ...)).
+            // Вешать свой click ЗДЕСЬ ЖЕ нельзя — при мышином клике сработают оба обработчика
+            // (наш click сразу + порождённый Lampa hover:enter через 20мс), openInput() вызовется
+            // дважды подряд и Lampa.Input.edit откроет клавиатуру два раза.
+            sb.AppendLine("  $(_btn).on('hover:enter', function(e) {");
             sb.AppendLine("    e.preventDefault();");
             sb.AppendLine("    if (_btn.disabled) return;");
             sb.AppendLine("    openInput();");
