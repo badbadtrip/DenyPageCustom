@@ -91,7 +91,17 @@ namespace DenyPageCustom
             // который сам Lampa.Controller вешает на активный элемент коллекции
             // (см. Controller.collectionFocus ниже), а не наш собственный хак.
             sb.AppendLine("    '#dpc-btn:focus,#dpc-btn.focus{background:#444547!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
-            sb.AppendLine("    '#dpc-tgbtn:focus,#dpc-tgbtn.focus{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}'");
+            sb.AppendLine("    '#dpc-tgbtn:focus,#dpc-tgbtn.focus{background:#333537!important;border-color:#bbb!important;color:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.15)!important;outline:none}',");
+
+            // Lampa.Input.edit (.settings-input, z-index:21 в стоке) и панель выбора языка
+            // клавиатуры (.selectbox, z-index:55 в стоке, глобус → Select.show) статически
+            // рендерятся ниже #dpc (99999) — поднимаем обе явно, а не гоняемся за ними через
+            // MutationObserver: .selectbox — синглтон, созданный Lampa один раз при старте
+            // приложения, его видимость переключается классом на <body>, а не появлением
+            // самого узла, так что перехватить момент показа через childList/attributes
+            // самого узла нельзя.
+            sb.AppendLine("    '.settings-input{z-index:100000!important}',");
+            sb.AppendLine("    '.selectbox{z-index:100001!important}'");
 
             sb.AppendLine("  ].join('');");
             sb.AppendLine("  document.head.appendChild(s);");
@@ -251,21 +261,10 @@ namespace DenyPageCustom
             // Тот же Lampa.Input.edit, что использует стоковый deny.js — это встроенная
             // в Lampa текстовая клавиатура (не нативный HTML input), она уже умеет
             // работать на Apple TV/tvOS и других TV-платформах без наших ручных хаков.
+            // Сама клавиатура (.settings-input) и панель выбора языка (.selectbox, по
+            // клику на глобус) статически рендерятся ниже #dpc (99999) — z-index для
+            // них поднят в стилях выше, отдельного JS-хака тут не требуется.
             sb.AppendLine("  function openInput() {");
-            sb.AppendLine("    // Lampa.Input.edit добавляет свою клавиатуру в конец <body> с z-index ниже,");
-            sb.AppendLine("    // чем у #dpc (99999) — иначе она рендерится под карточкой и выглядит как «ничего не произошло».");
-            sb.AppendLine("    // Вставка не гарантированно синхронна (может случиться на следующем тике/анимации),");
-            sb.AppendLine("    // поэтому вместо чтения lastElementChild сразу после вызова слушаем появление узла.");
-            sb.AppendLine("    var mo = new MutationObserver(function(muts) {");
-            sb.AppendLine("      for (var i = 0; i < muts.length; i++) {");
-            sb.AppendLine("        var added = muts[i].addedNodes;");
-            sb.AppendLine("        for (var j = 0; j < added.length; j++) {");
-            sb.AppendLine("          if (added[j].nodeType === 1) added[j].style.zIndex = '100000';");
-            sb.AppendLine("        }");
-            sb.AppendLine("      }");
-            sb.AppendLine("      mo.disconnect();");
-            sb.AppendLine("    });");
-            sb.AppendLine("    mo.observe(document.body, { childList: true });");
             sb.AppendLine("    Lampa.Input.edit({");
             sb.AppendLine("      free: true,");
             sb.AppendLine("      title: 'Введите пароль',");
