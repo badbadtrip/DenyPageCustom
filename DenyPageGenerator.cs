@@ -319,6 +319,16 @@ namespace DenyPageCustom
             sb.AppendLine("    },");
             sb.AppendLine("    back: function() {}");
             sb.AppendLine("  });");
+            sb.AppendLine();
+            // На слабых/маленьких устройствах загрузка самой Lampa (app.js: startApp →
+            // Activity.start и т.п.) завершается ПОЗЖЕ, чем мы показываем оверлей, и Lampa
+            // сама дергает Controller.toggle на свой компонент (menu/content) — фокус пульта
+            // угоняется под капот, хотя #dpc всё ещё виден поверх. Lampa.Controller не умеет
+            // "запирать" активный компонент, поэтому держим фокус силой: любой чужой toggle,
+            // пока #dpc жив, тут же перебивается обратно на dpc_component.
+            sb.AppendLine("  Lampa.Controller.listener.follow('toggle', function(e) {");
+            sb.AppendLine("    if (e.name !== 'dpc_component' && document.getElementById('dpc')) Lampa.Controller.toggle('dpc_component');");
+            sb.AppendLine("  });");
             sb.AppendLine("  Lampa.Controller.toggle('dpc_component');");
             sb.AppendLine("}");
             sb.AppendLine();
