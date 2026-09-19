@@ -8,6 +8,7 @@ namespace DenyPageCustom.Models
         public string page_title      { get; set; } = "";
         public string page_subtitle   { get; set; } = "";
         public string step1_text      { get; set; } = "";
+        public string step2_text      { get; set; } = "";
         public string qr_caption      { get; set; } = "";
         public string qr_subcaption   { get; set; } = "";
         public string tg_button_text  { get; set; } = "Открыть Telegram";
