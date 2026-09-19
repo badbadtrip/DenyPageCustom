@@ -32,8 +32,8 @@
 ## Скриншоты
 
 <p align="center">
-  <img src="screenshots/lampac.png" width="720" alt="Планшет / Desktop">
-  <img src="screenshots/lampacmob.png" width="380" alt="Мобильный">
+  <img src="screenshots/lampac.png" width="900" alt="Планшет / Desktop">
+  <img src="screenshots/lampacmob.png" width="460" alt="Мобильный">
 </p>
 
 ---
