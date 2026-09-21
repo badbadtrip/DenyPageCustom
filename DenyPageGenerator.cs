@@ -321,8 +321,6 @@ namespace DenyPageCustom
                 sb.AppendLine("  document.getElementById('dpc-qrcap').textContent = " + jsQrCap + ";");
                 sb.AppendLine("  document.getElementById('dpc-qrsub').textContent = " + jsQrSub + ";");
                 sb.AppendLine("  document.getElementById('dpc-qrpill').setAttribute('aria-label', " + jsTgBtn + ");");
-                sb.AppendLine("  document.getElementById('dpc-qrpill').href = tgUrl;");
-                sb.AppendLine("  renderQr(document.getElementById('dpc-qr-box'), tgUrl);");
                 sb.AppendLine();
             }
 
@@ -332,6 +330,54 @@ namespace DenyPageCustom
             sb.AppendLine("  var _focusGuard = true;");
             sb.AppendLine("  var _pendingContinue = null;");
             sb.AppendLine();
+
+            // ── QR pairing (lampa-nextgen-tg-bot) ────────────────────────────
+            // Static tg_target link is the fallback (just opens the bot chat). If a
+            // TelegramBot mod with the /tgbot/qr/* endpoints is installed alongside,
+            // it upgrades to a per-load session: QR encodes ?start=qr_<id>, the user
+            // taps "Подтвердить вход" in Telegram, and doLogin() below fires
+            // automatically with their existing token — no typing required. Silent
+            // failure of /tgbot/qr/start (mod absent, or path not in accsdb.whitepattern)
+            // just leaves the static link in place, so this never breaks the plain
+            // password flow for installs that don't run the bot.
+            if (hasTg && conf.show_qr)
+            {
+                sb.AppendLine("  (function initQr() {");
+                sb.AppendLine("    var qrPollTimer = null;");
+                sb.AppendLine("    function useStaticLink() {");
+                sb.AppendLine("      _qrpill.href = tgUrl;");
+                sb.AppendLine("      renderQr(document.getElementById('dpc-qr-box'), tgUrl);");
+                sb.AppendLine("    }");
+                sb.AppendLine("    function poll(sessionId) {");
+                sb.AppendLine("      var req = new Lampa.Reguest();");
+                sb.AppendLine("      req.silent('{localhost}/tgbot/qr/status?session=' + encodeURIComponent(sessionId), function(res) {");
+                sb.AppendLine("        if (res && res.status === 'confirmed' && res.token) {");
+                sb.AppendLine("          clearTimeout(qrPollTimer);");
+                sb.AppendLine("          doLogin(res.token);");
+                sb.AppendLine("        } else if (res && res.status === 'expired') {");
+                sb.AppendLine("          startSession();");
+                sb.AppendLine("        } else {");
+                sb.AppendLine("          qrPollTimer = setTimeout(function() { poll(sessionId); }, 2500);");
+                sb.AppendLine("        }");
+                sb.AppendLine("      }, function() {");
+                sb.AppendLine("        qrPollTimer = setTimeout(function() { poll(sessionId); }, 4000);");
+                sb.AppendLine("      });");
+                sb.AppendLine("    }");
+                sb.AppendLine("    function startSession() {");
+                sb.AppendLine("      clearTimeout(qrPollTimer);");
+                sb.AppendLine("      var req = new Lampa.Reguest();");
+                sb.AppendLine("      req.silent('{localhost}/tgbot/qr/start', function(res) {");
+                sb.AppendLine("        if (!res || !res.session) { useStaticLink(); return; }");
+                sb.AppendLine("        var qrUrl = tgUrl + '?start=qr_' + encodeURIComponent(res.session);");
+                sb.AppendLine("        _qrpill.href = qrUrl;");
+                sb.AppendLine("        renderQr(document.getElementById('dpc-qr-box'), qrUrl);");
+                sb.AppendLine("        poll(res.session);");
+                sb.AppendLine("      }, function() { useStaticLink(); });");
+                sb.AppendLine("    }");
+                sb.AppendLine("    startSession();");
+                sb.AppendLine("  })();");
+                sb.AppendLine();
+            }
 
             // ── waitAuthorized ──────────────────────────────────────────────────
             // После успешного логина сервер не всегда успевает применить сессию/cookie
